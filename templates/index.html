@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flask Starter</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Interface Web</h1>
+      <p>API de santé: <code>/api/health</code></p>
+      <section>
+        <h2>Items (depuis l’API)</h2>
+        <input id="q" placeholder="Filtre (q)" />
+        <button id="load">Charger</button>
+        <pre id="out"></pre>
+      </section>
+    </main>
+    <script>
+      const btn = document.getElementById('load');
+      btn.addEventListener('click', async () => {
+        const q = document.getElementById('q').value;
+        const url = q ? `/api/items?q=${encodeURIComponent(q)}` : '/api/items';
+        const res = await fetch(url);
+        const data = await res.json();
+        document.getElementById('out').textContent = JSON.stringify(data, null, 2);
+      });
+    </script>
+  </body>
+  </html>

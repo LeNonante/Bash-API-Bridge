@@ -1,0 +1,8 @@
+[
+    {
+        "id": 1,
+        "name": "Sample Command",
+        "description": "This is a sample command for testing purposes.",
+        "commandes": "echo 'Hello, World!'"
+    }
+]
