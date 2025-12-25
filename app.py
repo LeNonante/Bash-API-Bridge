@@ -52,8 +52,16 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def index():
-    
-    return "index.html"
+    routes=[
+        {"method":"GET","path":"/api","description":"Page d'accueil","active":True,"command":"echo 'hello world'"},
+        {"method":"POST","path":"/api","description":"Page d'accueil","active":True,"command":"echo 'hello world'"},
+        {"method":"PUT","path":"/api","description":"Page d'accueil","active":True,"command":"echo 'hello world'"},
+        {"method":"DELETE","path":"/api","description":"Test","active":False,"command":"echo 'AURORE'"}
+    ]
+    nb_etats={False:0,True:0}
+    for route in routes:
+        nb_etats[route["active"]]+=1
+    return render_template('index.html', routes=routes, total_routes=len(routes), active_routes=nb_etats[True], inactive_routes=nb_etats[False])
 
 
 
@@ -77,7 +85,7 @@ def register():
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
-        return "index"
+        return redirect(url_for('index'))
     
     if request.method == "POST":
         if request.form.get("action")=="loginUser":
@@ -86,7 +94,7 @@ def login():
             if checkAdminPassword(password):
                 #session.permanent = True  # Rendre la session permanente (12h définies plus haut)
                 login_user(User("admin"))
-                return 'index'  # Rediriger vers la page d'accueil après la connexion
+                return redirect(url_for('index'))  # Rediriger vers la page d'accueil après la connexion
             else:
                 return render_template('login.html', erreur="Mot de passe administrateur incorrect.")
             
