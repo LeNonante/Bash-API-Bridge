@@ -30,9 +30,9 @@ def getApiPrefix():
     return prefix
 
 def setApiPrefix(env_file, prefix):
-    set_key(env_file, "API_PREFIX", prefix)
     if prefix[-1] != '/':
         prefix += '/'
     if not prefix.startswith('/'):
         prefix = '/' + prefix
+    set_key(env_file, "API_PREFIX", prefix)
     load_dotenv(override=True)

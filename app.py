@@ -13,7 +13,7 @@ app = Flask(__name__)
 if not isThereASecretKey(): #Si pas de clef secrete (utilisée pour les sessions)
     # Générer une clé secrète aléatoire et la stocker dans le .env
     secret_key = os.urandom(24).hex()
-    setSecretKey(secret_key)#Enregistrer la clef dans le .env
+    setSecretKey(".env",secret_key)#Enregistrer la clef dans le .env
     app.secret_key=secret_key #Enregistrer la clef dans l'app
 else :
     app.secret_key=getSecretKey() #Lire la clef dans le .env et l'enregistrer dans l'app
@@ -71,6 +71,11 @@ def register():
             
             else :        
                 setAdminPassword(".env",admin_password)
+                api_prefix = request.form.get("prefix")
+                if api_prefix:
+                    setApiPrefix(".env", api_prefix)
+                else :
+                    setApiPrefix(".env", "/bashapi")
                 return redirect(url_for('login'))  # Rediriger vers la page de connexion après
             
     return render_template('register.html')
