@@ -2,7 +2,7 @@ from flask import Flask, request, redirect, url_for, render_template, send_file
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv
 from services.config import *
-
+import json
 
 
 load_dotenv()
@@ -52,12 +52,7 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def index():
-    routes=[
-        {"method":"GET","path":"/api","description":"Page d'accueil","active":True,"command":"echo 'hello world'"},
-        {"method":"POST","path":"/api","description":"Page d'accueil","active":True,"command":"echo 'hello world'"},
-        {"method":"PUT","path":"/api","description":"Page d'accueil","active":True,"command":"echo 'hello world'"},
-        {"method":"DELETE","path":"/api","description":"Test","active":False,"command":"echo 'AURORE'"}
-    ]
+    routes=json.load(open(os.path.join(app.root_path, "commandes.json"),"r",encoding="utf-8"))
     nb_etats={False:0,True:0}
     for route in routes:
         nb_etats[route["active"]]+=1
