@@ -24,19 +24,15 @@
             <h2>Création compte Administrateur</h2>
             <p class="description">Veuillez créer le compte administrateur de votre instance.</p>
             
-            <form method="post" action="/register">
-                {% if erreur %}
-                    <div class="error-message">{{ erreur }}</div>
-                {% endif %}
-                
+            <form method="post" action="/register">                
                 <div class="form-group">
-                    <label for="prefix">Facultatif : Préfixe des routes</label>
+                    <label for="prefix">Facultatif : Préfixe des routes API (sans '/')</label>
                     <div class="input-wrapper">
                         <input 
                             type="text" 
                             id="prefix" 
                             name="prefix"
-                            placeholder="Entrez le préfixe des routes. Par défaut : /bashapi"
+                            placeholder="Entrez le préfixe des routes API. Par défaut : bashapi"
                             autocomplete="off"
                         >
                     </div>
@@ -81,7 +77,9 @@
                         </button>
                     </div>
                 </div>
-
+                {% if erreur %}
+                    <div class="error-message">{{ erreur }}</div>
+                {% endif %}
                 <button type="submit" class="btn-submit" name="action" value="createAdminAccount">
                     Créer le compte
                 </button>

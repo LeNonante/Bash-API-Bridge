@@ -1,10 +1,13 @@
-from flask import Flask, request, redirect, url_for, render_template, send_file
+from flask import Flask, flash, jsonify, request, redirect, url_for, render_template, send_file
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv
 from services.config import *
 import json
+import re
+import secrets
+from werkzeug.security import generate_password_hash, check_password_hash
 
-
+pattern_prefix_api = r'^[a-zA-Z0-9]+$'
 load_dotenv()
 
 app = Flask(__name__)
@@ -73,13 +76,14 @@ def register():
                 setAdminPassword(".env",admin_password)
                 api_prefix = request.form.get("prefix")
                 if api_prefix:
+                    if not re.match(pattern_prefix_api, api_prefix):
+                        return render_template('register.html', erreur="Le préfixe API contient des caractères invalides. Seules les lettres (min, maj) et les chiffres sont autorisés.")
                     setApiPrefix(".env", api_prefix)
                 else :
                     setApiPrefix(".env", "/bashapi")
-                return redirect(url_for('login'))  # Rediriger vers la page de connexion après
+                    return redirect(url_for('login'))  # Rediriger vers la page de connexion après
             
     return render_template('register.html')
-
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
@@ -111,6 +115,7 @@ def logout():
 @login_required
 def settings():
     context = {}
+    context["api_prefix"] = getApiPrefix()[:-1]
     if request.method == "POST":
         if request.form.get("action") == "changePassword":
             current_password = request.form.get("current_password")
@@ -146,8 +151,21 @@ def settings():
             uploaded_file.save(save_path)
             context["import_success"] = "Fichier importé et sauvegardé."
             return render_template('settings.html', **context)
-
-    return render_template('settings.html')
+        
+        if request.form.get("action") == "changeApiPrefix":
+            new_prefix = request.form.get("new_prefix")
+            if not new_prefix:
+                context["api_prefix_erreur"] = "Le préfixe API ne peut pas être vide."
+                return render_template('settings.html', **context)
+            
+            if not re.match(pattern_prefix_api, new_prefix):
+                context["api_prefix_erreur"] = "Le préfixe API contient des caractères invalides. Seules les lettres (min, maj) et les chiffres sont autorisés.)"
+                return render_template('settings.html', **context)
+            
+            setApiPrefix(".env", new_prefix)
+            context["api_prefix_success"] = "Préfixe API mis à jour avec succès."
+            context["api_prefix"] = getApiPrefix()[:-1]
+    return render_template('settings.html', **context)
 
 
 @app.route('/settings/export', methods=["GET"])
@@ -193,11 +211,10 @@ def edit_route(route_id):
     if not route:
         return redirect(url_for('index'))
     
-    context = {"route": route, "api_prefix": api_prefix}
+    context = {"route": route, "api_prefix": api_prefix, "new_token": secrets.token_urlsafe(32)}
     
     if request.method == "POST":
         action = request.form.get("action")
-        
         if action == "save":
             route["method"] = request.form.get("method")
             route["path"] = request.form.get("path")
@@ -239,9 +256,13 @@ def edit_route(route_id):
                 context["test_success"] = False
             
             return render_template('edit_route.html', **context)
-    
+        elif action == "generate_token":
+            token=request.form.get("token_value")
+            hashed_token=generate_password_hash(token)
+            route["hashed_token"] = hashed_token
+            with open(commands_path, "w", encoding="utf-8") as f:
+                json.dump(routes, f, indent=4, ensure_ascii=False)
     return render_template('edit_route.html', **context)
-
 
 @app.route('/route/delete/<int:route_id>', methods=["POST"])
 @login_required

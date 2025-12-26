@@ -34,7 +34,7 @@
             <div>
                 <h1>Routes API</h1>
                 <p class="page-description">Configurez les liens entre vos endpoints HTTP et les commandes système.</p>
-                <p class="page-description">Domaine des routes configurées : <code class="domain-code">{{request.host_url}}</code></p>
+                <p class="page-description">Domaine des routes configurées : <code class="domain-code">{{request.host_url}}{{ api_prefix[1:] }}</code></p>
             </div>
             <button class="btn-primary">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -117,9 +117,13 @@
                         <td>
                             <span class="method-badge method-{{ route.method.lower() }}">{{ route.method }}</span>
                         </td>
-                        <td><code class="path-code">{{ api_prefix }}{{ route.path }}</code></td>
+                        <td><code class="path-code">{{ route.path }}</code></td>
                         <td class="description">{{ route.description }}</td>
-                        <td><code class="bash-code">{{ route.command }}</code></td>
+                        {% if route.command|length < 66 %}
+                            <td><code class="bash-code">{{ route.command }}</code></td>
+                        {% else %}
+                            <td><code class="bash-code">{{ route.command[:62] }}...</code></td>
+                        {% endif %}
                         <td>
                             <form method="post" action="{{ url_for('toggle_route') }}">
                             <input type="hidden" name="route_id" value="{{ route.id }}">
