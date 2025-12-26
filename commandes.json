@@ -106,5 +106,14 @@
         "command": "aaaaaaa",
         "active": true,
         "hashed_token": "scrypt:32768:8:1$vcyFVM0qNRwa1ydx$e69b8a53b372b6d4f587ff067ca6a80f3f0abde43674553d05d58a44c3eb160db452005ea7747863b23d242a1fd8a4344b2c4fb8e5ae6d2d4fb57636f5bfd637"
+    },
+    {
+        "id": 14,
+        "method": "GET",
+        "path": "test",
+        "description": "",
+        "command": "test",
+        "active": true,
+        "hashed_token": "scrypt:32768:8:1$WJ2Kczgk4Lsh7wzP$ad35f7ea8a622b2cd43b69a998b53d17a9b8e5fff2367c39092210b54ddeb8a4e95cd6375c6a18a19265f8190c6f8422ced0e9cd7f3738b646960ea7fdf5fb01"
     }
 ]

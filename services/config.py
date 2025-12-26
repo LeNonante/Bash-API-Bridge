@@ -17,7 +17,7 @@ def isThereAdmin() :
     return os.getenv("ADMIN_PASSWORD") is not None
 
 def setAdminPassword(env_file,password) :
-    hashed_password=generate_password_hash(password.lower())
+    hashed_password=generate_password_hash(password)
     set_key(env_file, "ADMIN_PASSWORD", hashed_password)
     load_dotenv(override=True)
 
