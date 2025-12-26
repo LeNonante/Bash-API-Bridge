@@ -36,43 +36,71 @@
                 <h1>Paramètres</h1>
             </div>
         </div>
-        <div class="login-card" style="max-width: 640px; margin: 0;">
+        <div class="settings-grid">
+            <div class="login-card settings-card">
+                <h2>Changer le mot de passe administrateur</h2>
+                <p class="description">Saisissez votre ancien mot de passe, puis le nouveau (deux fois) pour confirmer.</p>
 
-            <h2>Changer le mot de passe administrateur</h2>
-            <p class="description">Saisissez votre ancien mot de passe, puis le nouveau (deux fois) pour confirmer.</p>
-
-            <form method="post">
-                <input type="hidden" name="action" value="changePassword">
-                <div class="form-group">
-                    <label for="current_password">Ancien mot de passe</label>
-                    <div class="input-wrapper">
-                        <input type="password" id="current_password" name="current_password" placeholder="••••••••" required>
+                <form method="post">
+                    <input type="hidden" name="action" value="changePassword">
+                    <div class="form-group">
+                        <label for="current_password">Ancien mot de passe</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="current_password" name="current_password" placeholder="••••••••" required>
+                        </div>
                     </div>
+
+                    <div class="form-group">
+                        <label for="new_password1">Nouveau mot de passe</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="new_password1" name="new_password1" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_password2">Confirmer le nouveau mot de passe</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="new_password2" name="new_password2" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                        {% if erreur %}
+                        <p class="error-message" style="margin-bottom: 16px;">{{ erreur }}</p>
+                        {% endif %}
+                        {% if success %}
+                        <p class="success-message" style="margin-bottom: 16px;">{{ success }}</p>
+                        {% endif %}
+                    <button class="btn-primary" type="submit">
+                        Mettre à jour le mot de passe
+                    </button>
+                </form>
+            </div>
+
+            <div class="login-card settings-card">
+                <h2>Exporter / Importer la configuration</h2>
+                <p class="description">Exportez le fichier commandes.json actuel ou importez un nouveau JSON pour remplacer la configuration.</p>
+
+                <div class="button-row">
+                    <a class="btn-secondary" href="/settings/export">Exporter commandes.json</a>
                 </div>
 
-                <div class="form-group">
-                    <label for="new_password1">Nouveau mot de passe</label>
-                    <div class="input-wrapper">
-                        <input type="password" id="new_password1" name="new_password1" placeholder="••••••••" required>
-                    </div>
-                </div>
+                {% if import_error %}
+                <p class="error-message" style="margin-bottom: 16px;">{{ import_error }}</p>
+                {% endif %}
+                {% if import_success %}
+                <p class="success-message" style="margin-bottom: 16px;">{{ import_success }}</p>
+                {% endif %}
 
-                <div class="form-group">
-                    <label for="new_password2">Confirmer le nouveau mot de passe</label>
-                    <div class="input-wrapper">
-                        <input type="password" id="new_password2" name="new_password2" placeholder="••••••••" required>
+                <form method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="importCommands">
+                    <div class="form-group">
+                        <label for="commands_file">Importer un fichier JSON</label>
+                        <div class="input-wrapper file-input-wrapper">
+                            <input type="file" id="commands_file" name="commands_file" accept=".json" required>
+                        </div>
                     </div>
-                </div>
-                    {% if erreur %}
-                    <p class="error-message" style="margin-bottom: 16px;">{{ erreur }}</p>
-                    {% endif %}
-                    {% if success %}
-                    <p class="success-message" style="margin-bottom: 16px;">{{ success }}</p>
-                    {% endif %}
-                <button class="btn-primary" type="submit">
-                    Mettre à jour le mot de passe
-                </button>
-            </form>
+                    <button class="btn-primary" type="submit">Importer le fichier</button>
+                </form>
+            </div>
         </div>
     </main>
 

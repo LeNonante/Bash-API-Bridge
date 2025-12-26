@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, render_template, send_file
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv
 from services.config import *
@@ -111,6 +111,7 @@ def logout():
 @app.route('/settings', methods=["GET", "POST"])
 @login_required
 def settings():
+    context = {}
     if request.method == "POST":
         if request.form.get("action") == "changePassword":
             current_password = request.form.get("current_password")
@@ -119,17 +120,44 @@ def settings():
 
             # Vérifier l'ancien mot de passe
             if not checkAdminPassword(current_password):
-                return render_template('settings.html', erreur="Ancien mot de passe incorrect.")
+                context["erreur"] = "Ancien mot de passe incorrect."
+                return render_template('settings.html', **context)
 
             # Vérifier la correspondance des nouveaux mots de passe
             if not new_password1 or not new_password2 or new_password1 != new_password2:
-                return render_template('settings.html', erreur="Les nouveaux mots de passe doivent correspondre.")
+                context["erreur"] = "Les nouveaux mots de passe doivent correspondre."
+                return render_template('settings.html', **context)
 
             # Mettre à jour le mot de passe admin
             setAdminPassword(".env", new_password1)
-            return render_template('settings.html', success="Mot de passe mis à jour avec succès.")
+            context["success"] = "Mot de passe mis à jour avec succès."
+            return render_template('settings.html', **context)
+
+        if request.form.get("action") == "importCommands":
+            uploaded_file = request.files.get("commands_file")
+            if uploaded_file is None or uploaded_file.filename == "":
+                context["import_error"] = "Aucun fichier sélectionné."
+                return render_template('settings.html', **context)
+
+            if not uploaded_file.filename.lower().endswith(".json"):
+                context["import_error"] = "Le fichier doit être au format JSON."
+                return render_template('settings.html', **context)
+
+            save_path = os.path.join(app.root_path, "commandes.json")
+            uploaded_file.save(save_path)
+            context["import_success"] = "Fichier importé et sauvegardé."
+            return render_template('settings.html', **context)
 
     return render_template('settings.html')
+
+
+@app.route('/settings/export', methods=["GET"])
+@login_required
+def export_commands():
+    commands_path = os.path.join(app.root_path, "commandes.json")
+    if not os.path.exists(commands_path):
+        return "Aucun fichier commandes.json à exporter", 404
+    return send_file(commands_path, as_attachment=True, download_name="commandes.json")
 
 if __name__ == "__main__":
     app.run(debug=True)
