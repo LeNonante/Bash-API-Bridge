@@ -90,7 +90,7 @@
     {
         "id": 4,
         "method":"PUT",
-        "path": "/api",
+        "path": "/api/test",
         "description": "This is a sample command for testing purposes.",
         "command": "echo 'AURORE'",
         "active": true
