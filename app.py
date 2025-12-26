@@ -267,8 +267,29 @@ def edit_route(route_id):
 @app.route('/route/new', methods=["POST", "GET"])
 @login_required
 def create_route():
-    token=secrets.token_urlsafe(32)    
-    return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=token)
+    if request.method == "POST":
+        commands_path = os.path.join(app.root_path, "commandes.json")
+        routes = json.load(open(commands_path, "r", encoding="utf-8"))
+        
+        new_id = max((route["id"] for route in routes), default=0) + 1
+        new_route = {
+            "id": new_id,
+            "method": request.form.get("method"),
+            "path": request.form.get("path"),
+            "description": request.form.get("description"),
+            "command": request.form.get("command"),
+            "active": True,
+            "hashed_token": generate_password_hash(request.form.get("token_value"))
+        }
+        routes.append(new_route)
+        
+        with open(commands_path, "w", encoding="utf-8") as f:
+            json.dump(routes, f, indent=4, ensure_ascii=False)
+        
+        return redirect(url_for('edit_route', route_id=new_id))
+    else :
+        token=secrets.token_urlsafe(32)    
+        return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=token)
 
 
 @app.route('/route/delete/<int:route_id>', methods=["POST"])
