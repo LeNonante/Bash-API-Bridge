@@ -264,6 +264,13 @@ def edit_route(route_id):
                 json.dump(routes, f, indent=4, ensure_ascii=False)
     return render_template('edit_route.html', **context)
 
+@app.route('/route/new', methods=["POST", "GET"])
+@login_required
+def create_route():
+    token=secrets.token_urlsafe(32)    
+    return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=token)
+
+
 @app.route('/route/delete/<int:route_id>', methods=["POST"])
 @login_required
 def delete_route(route_id):
