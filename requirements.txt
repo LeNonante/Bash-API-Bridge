@@ -2,4 +2,4 @@ flask
 gunicorn
 werkzeug
 flask_login
-re
+python-dotenv
