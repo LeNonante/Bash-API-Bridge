@@ -62,6 +62,10 @@
         <div class="alert alert-success">{{ success }}</div>
         {% endif %}
 
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
         {% if test_output %}
         <div class="alert {{ 'alert-success' if test_success else 'alert-error' }}">
             <strong>Résultat du test:</strong>

@@ -53,6 +53,10 @@
         <div class="alert alert-success">{{ success }}</div>
         {% endif %}
 
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
         {% if test_output %}
         <div class="alert {{ 'alert-success' if test_success else 'alert-error' }}">
             <strong>Résultat du test:</strong>
@@ -76,11 +80,11 @@
                     <div class="form-group">
                         <label for="method">Méthode HTTP</label>
                         <select id="method" name="method" class="form-select" required>
-                            <option value="GET" selected>GET</option>
-                            <option value="POST">POST</option>
-                            <option value="PUT">PUT</option>
-                            <option value="DELETE">DELETE</option>
-                            <option value="PATCH">PATCH</option>
+                            <option value="GET" {% if method == 'GET' %}selected{% endif %}>GET</option>
+                            <option value="POST" {% if method == 'POST' %}selected{% endif %}>POST</option>
+                            <option value="PUT" {% if method == 'PUT' %}selected{% endif %}>PUT</option>
+                            <option value="DELETE" {% if method == 'DELETE' %}selected{% endif %}>DELETE</option>
+                            <option value="PATCH" {% if method == 'PATCH' %}selected{% endif %}>PATCH</option>
                         </select>
                     </div>
 
@@ -88,7 +92,7 @@
                         <label>Endpoint Path</label>
                         <div class="path-input-group">
                             <span class="path-prefix">{{ api_prefix }}</span>
-                            <input type="text" id="path" name="path" class="form-input path-input" placeholder="deploy-service/firstservice" required>
+                            <input type="text" id="path" name="path" class="form-input path-input" placeholder="deploy-service/firstservice" required value="{{ path }}">
                         </div>
                     </div>
                 </div>
@@ -111,7 +115,7 @@
                             Copier
                         </button>
                     </div>
-                    <textarea id="command" name="command" class="code-editor" rows="12" required placeholder="echo 'Hello, World!'"></textarea>
+                    <textarea id="command" name="command" class="code-editor" rows="12" required placeholder="echo 'Hello, World!'">{{ command }}</textarea>
                 </div>
             </div>
 
@@ -121,7 +125,7 @@
                 
                 <div class="form-group">
                     <label for="description">Description</label>
-                    <textarea id="description" name="description" class="form-textarea" rows="6" placeholder="Deploy the first example service."></textarea>
+                    <textarea id="description" name="description" class="form-textarea" rows="6" placeholder="Deploy the first example service.">{{ description }}</textarea>
                 </div>
 
                 <input type="hidden" name="token_value" value="{{ new_token }}">

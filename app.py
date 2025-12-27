@@ -10,6 +10,7 @@ from api.routes import api_bp
 import subprocess
 
 pattern_prefix_api = r'^[a-zA-Z0-9]+$'
+pattern_path_route = r'^[a-zA-Z0-9/_-]+$'
 load_dotenv()
 
 app = Flask(__name__)
@@ -219,11 +220,17 @@ def edit_route(route_id):
     if request.method == "POST":
         action = request.form.get("action")
         if action == "save":
+            
+            clean_path = request.form.get("path").strip('/').replace(" ", "") #On enlève les slashs de début et fin et les espaces
+            
+            clean_path = re.sub(r'/+', '/', clean_path) #Remplacement des blocs de slash (// ou /// par exemple) par un seul slash
+            if not re.match(pattern_path_route, clean_path):
+                context["error"] = "Le chemin de la route contient des caractères invalides. Seules les lettres (min, maj), chiffres, tirets (-), underscores (_) et slashs (/) sont autorisés."
+                return render_template('edit_route.html', **context)
+            route["path"] = clean_path
             route["method"] = request.form.get("method")
-            route["path"] = request.form.get("path").strip('/')
             route["description"] = request.form.get("description")
             route["command"] = request.form.get("command")
-            
             with open(commands_path, "w", encoding="utf-8") as f:
                 json.dump(routes, f, indent=4, ensure_ascii=False)
             
@@ -273,17 +280,23 @@ def create_route():
     if request.method == "POST":
         commands_path = os.path.join(app.root_path, "commandes.json")
         routes = json.load(open(commands_path, "r", encoding="utf-8"))
+        path=request.form.get("path").strip('/').replace(" ", "") #On enlève les slashs de début et fin et les espaces
+        path = re.sub(r'/+', '/', path) #Remplacement des blocs de slash (// ou /// par exemple) par un seul slash
         
-        new_id = max((route["id"] for route in routes), default=0) + 1
         new_route = {
-            "id": new_id,
             "method": request.form.get("method"),
-            "path": request.form.get("path").strip('/'),
+            "path": path,
             "description": request.form.get("description"),
             "command": request.form.get("command"),
             "active": True,
             "hashed_token": generate_password_hash(request.form.get("token_value"))
         }
+        
+        if not re.match(pattern_path_route, path):
+            error = "Le chemin de la route contient des caractères invalides. Seules les lettres (min, maj), chiffres, tirets (-), underscores (_) et slashs (/) sont autorisés."
+            return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=request.form.get("token_value"), error=error, **request.form)
+        new_id = max((route["id"] for route in routes), default=0) + 1
+        new_route["id"] = new_id
         routes.append(new_route)
         
         with open(commands_path, "w", encoding="utf-8") as f:
