@@ -6,6 +6,7 @@ import json
 import re
 import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 from api.routes import api_bp
 import subprocess
 import os
@@ -20,6 +21,16 @@ if not os.path.exists(os.path.join(os.path.dirname(__file__), "commandes.json"))
 
 
 app = Flask(__name__)
+# On dit à Flask : "Fais confiance au proxy qui est juste devant toi (Cloudflare)" Permet de résoudre les problèmes de détection du protocole et du nom de domaine réel.
+# x_proto=1 : Fais confiance à 1 proxy pour le protocole (http/https)
+# x_host=1  : Fais confiance à 1 proxy pour le nom de domaine
+app.wsgi_app = ProxyFix(
+    app.wsgi_app, 
+    x_for=1, 
+    x_proto=1, 
+    x_host=1, 
+    x_prefix=1
+)
 app.register_blueprint(api_bp) #Enregistrement du blueprint de l'API dynamique. Comme on veut un prefixe qui peut changer sans redemarrer l'app, on le gère dans le blueprint lui mêmeet pas ici (qui est plus porpre pour un prefixe fixe).
 
 if not isThereASecretKey(): #Si pas de clef secrete (utilisée pour les sessions)
