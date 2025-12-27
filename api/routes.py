@@ -23,11 +23,12 @@ def api_dynamique_path(full_path):
     # On enlève la longueur du prefix + 1 pour le slash suivant
     # Ex: "monapi/test1/r1" -> "test1/r1"
     real_route_part = full_path[len(prefix)+1:].strip('/')
-    
     for route in routes_data:
         if route['active']:
             route_path = route['path'].strip('/')
+            print(route_path, real_route_part)
             if route_path == real_route_part and request.method.upper() == route['method']:
+                print('er')
                 #On récupère le token d'authorization dans les headers
                 auth_header = request.headers.get('Authorization')
                 token_recu = None
@@ -54,4 +55,4 @@ def api_dynamique_path(full_path):
                             return jsonify({"error": "Unauthorized"}), 401
                 else:
                     return jsonify({"error": "Unauthorized"}), 401
-        return jsonify({"error": "Not Found"}), 404
+    return jsonify({"error": "Not Found"}), 404
