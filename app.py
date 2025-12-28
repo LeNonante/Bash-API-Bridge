@@ -10,6 +10,8 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from api.routes import api_bp
 import subprocess
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 
 pattern_prefix_api = r'^[a-zA-Z0-9]+$'
 pattern_path_route = r'^[a-zA-Z0-9/_-]+$'
@@ -21,6 +23,24 @@ if not os.path.exists(os.path.join(os.path.dirname(__file__), "commandes.json"))
 
 
 app = Flask(__name__)
+
+# Chemin du fichier log
+log_file_path = os.path.join(os.path.dirname(__file__), "api-activity.log")
+
+# Configuration : Max 1 Mo (1 000 000 octets), 1 fichier de backup
+handler = RotatingFileHandler(log_file_path, maxBytes=1000000, backupCount=1)
+
+# Format : Date - Niveau - Message
+handler.setFormatter(logging.Formatter(
+    '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+))
+
+# Niveau minimum : INFO (pour voir les exécutions et les erreurs)
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+
+
+
 # On dit à Flask : "Fais confiance au proxy qui est juste devant toi (Cloudflare)" Permet de résoudre les problèmes de détection du protocole et du nom de domaine réel.
 # x_proto=1 : Fais confiance à 1 proxy pour le protocole (http/https)
 # x_host=1  : Fais confiance à 1 proxy pour le nom de domaine
