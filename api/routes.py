@@ -11,7 +11,7 @@ api_bp = Blueprint('api_dynamique', __name__)
 @api_bp.route('/<path:full_path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH']) # Route pour gérer toutes les requêtes sous le préfixe API
 def api_dynamique_path(full_path):
     prefix = getApiPrefix().strip('/')  # Supprimer le '/' de début et de la fin
-    current_app.logger.info(f"Appel API reçu : {full_path} | Méthode: {request.method} | IP: {request.remote_addr}")
+    current_app.logger.info(f"Appel API recu : {full_path} | Methode: {request.method} | IP: {request.remote_addr}")
     if not full_path.startswith(prefix+'/'):
         # Si le chemin ne commence pas par le préfixe, renvoyer 404
         return jsonify({"error": "Not Found"}), 404

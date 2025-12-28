@@ -1,4 +1,4 @@
-from flask import Flask, flash, jsonify, request, redirect, url_for, render_template, send_file
+from flask import Flask, flash, jsonify, request, redirect, url_for, render_template, send_file, g
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv
 from services.config import *
@@ -10,8 +10,37 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from api.routes import api_bp
 import subprocess
 import os
+import uuid
 import logging
 from logging.handlers import RotatingFileHandler
+
+app = Flask(__name__)
+
+# Création d'un filtre qui injecte l'ID dans chaque log
+class RequestIdFilter(logging.Filter):
+    def filter(self, record):
+        # Récupère l'ID stocké dans 'g', ou met 'SYSTEM' si hors requête
+        record.request_id = getattr(g, 'request_id', 'SYSTEM')
+        return True
+
+# Chemin du fichier log
+log_file_path = os.path.join(os.path.dirname(__file__), "api-activity.log")
+
+# Configuration : Max 1 Mo (1 000 000 octets), 1 fichier de backup
+handler = RotatingFileHandler(log_file_path, maxBytes=1000000, backupCount=1)
+
+# On ajoute le filtre au handler
+handler.addFilter(RequestIdFilter())
+
+# Format : Date - ID - Niveau - Message
+handler.setFormatter(logging.Formatter(
+    '[%(asctime)s] [%(request_id)s] %(levelname)s in %(module)s: %(message)s'
+))
+
+# Niveau minimum : INFO (pour voir les exécutions et les erreurs)
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+
 
 pattern_prefix_api = r'^[a-zA-Z0-9]+$'
 pattern_path_route = r'^[a-zA-Z0-9/_-]+$'
@@ -20,24 +49,6 @@ load_dotenv()
 if not os.path.exists(os.path.join(os.path.dirname(__file__), "commandes.json")): #Si le fichier commandes.json n'existe pas, on le crée avec un tableau vide
     with open(os.path.join(os.path.dirname(__file__), "commandes.json"), "w", encoding="utf-8") as f:
         json.dump([], f)
-
-
-app = Flask(__name__)
-
-# Chemin du fichier log
-log_file_path = os.path.join(os.path.dirname(__file__), "api-activity.log")
-
-# Configuration : Max 1 Mo (1 000 000 octets), 1 fichier de backup
-handler = RotatingFileHandler(log_file_path, maxBytes=1000000, backupCount=1)
-
-# Format : Date - Niveau - Message
-handler.setFormatter(logging.Formatter(
-    '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
-))
-
-# Niveau minimum : INFO (pour voir les exécutions et les erreurs)
-app.logger.addHandler(handler)
-app.logger.setLevel(logging.INFO)
 
 
 
@@ -73,6 +84,8 @@ class User(UserMixin):
 #Avant chaque requete, on verifie si l'application est initialisée        
 @app.before_request
 def check_initialisation():
+    # Génère un ID unique court (8 caractères)
+    g.request_id = str(uuid.uuid4())[:8]
     
     # Empêcher boucle infinie : on laisse accéder à /register
     if request.endpoint=="static":
