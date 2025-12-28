@@ -104,7 +104,6 @@ Pour surveiller l'activité de l'API en direct :
 ```bash
 tail -f /opt/api-bash-bridge/api-activity.log
 ```
-Attention, le fichier n'existe pas tant qu'aucune requête n'a été faite à l'API.
 ---
 
 ## 👤 Auteur
