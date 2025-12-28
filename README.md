@@ -76,6 +76,18 @@ sudo systemctl status api-bash-bridge
 
 ## 📜 Logs
 
+Pour faciliter le débogage et l'audit de sécurité, l'application génère un fichier de journalisation local situé à la racine de l'installation (`/opt/api-bash-bridge/api-activity.log`).
+
+### Fonctionnalités des logs
+* **Rotation automatique :** Pour préserver l'espace disque, le fichier est limité à **1 Mo**. Une fois cette taille atteinte, il est archivé en `api-activity.log.1` et un nouveau fichier est créé (1 seule archive conservée).
+* **Request ID (Traçabilité) :** Chaque requête HTTP vers l'API se voit attribuer un identifiant unique (ex: `[a1b2c3d4]`). Cela permet de suivre le cheminement exact d'un appel spécifique dans les logs, même si plusieurs requêtes arrivent simultanément.
+* **Contenu :** Chaque ligne contient l'horodatage, l'ID de requête, le niveau de log, et le message (incluant l'IP source et le statut de succès/échec).
+* **Exportation :** Les fichiers de logs sont téléchargeables depuis la page paramètres de l'interface. 
+### Consulter les logs en temps réel
+Pour surveiller l'activité de l'API en direct :
+
+```bash
+tail -f /opt/api-bash-bridge/api-activity.log
 ---
 
 ## 🛡️ Avertissement de Sécurité
