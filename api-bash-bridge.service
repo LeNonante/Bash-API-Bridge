@@ -3,7 +3,6 @@ Description=Interface et programme liant API & commandes bash
 After=network.target
 
 [Service]
-# --- C'EST ICI QUE TOUT SE JOUE ---
 # L'application tourne sous VOTRE identité
 User=aurel
 Group=aurel
