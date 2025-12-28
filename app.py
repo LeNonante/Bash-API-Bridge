@@ -13,6 +13,8 @@ import os
 import uuid
 import logging
 from logging.handlers import RotatingFileHandler
+import zipfile
+from io import BytesIO
 
 app = Flask(__name__)
 
@@ -230,6 +232,23 @@ def export_commands():
     if not os.path.exists(commands_path):
         return "Aucun fichier commandes.json à exporter", 404
     return send_file(commands_path, as_attachment=True, download_name="commandes.json")
+
+@app.route('/settings/export-logs', methods=["GET"])
+@login_required
+def export_logs():
+    logs_path = os.path.join(app.root_path, "api-activity.log")
+    if not os.path.exists(logs_path):
+        return "Aucun fichier de logs à exporter", 404
+    # On regarde si il y a un autre fichier de logs (backup)
+    if os.path.exists(logs_path + ".1"):
+        # On crée un fichier zip contenant les deux fichiers de logs
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+            zip_file.write(logs_path, arcname="api-activity.log")
+            zip_file.write(logs_path + ".1", arcname="api-activity.log.1")
+        zip_buffer.seek(0)
+        return send_file(zip_buffer, as_attachment=True, download_name="api-activity-logs.zip", mimetype='application/zip')
+    return send_file(logs_path, as_attachment=True, download_name="api-activity.log")
 
 @app.route('/toggle_route', methods=["POST"])
 @login_required

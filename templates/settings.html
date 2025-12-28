@@ -78,6 +78,30 @@
             </div>
 
             <div class="login-card settings-card">
+                <h2>Changer le préfixe API</h2>
+                <p class="description">Changez le préfixe utilisé pour les appels API.</p>
+                <p class="description">Ancien préfixe : {{ api_prefix }}</p>
+                <form method="post">
+                    <input type="hidden" name="action" value="changeApiPrefix">
+                    <div class="form-group">
+                        <label for="new_prefix">Nouveau préfixe API (sans '/')</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="new_prefix" name="new_prefix" placeholder="nouveau_prefixe" required>
+                        </div>
+                    </div>
+                    {% if api_prefix_erreur %}
+                    <p class="error-message" style="margin-bottom: 16px;">{{ api_prefix_erreur }}</p>
+                    {% endif %}
+                    {% if api_prefix_success %}
+                    <p class="success-message" style="margin-bottom: 16px;">{{ api_prefix_success }}</p>
+                    {% endif %}
+                    <button class="btn-primary" type="submit">
+                        Mettre à jour le préfixe API
+                    </button>
+                </form>
+            </div>
+
+            <div class="login-card settings-card">
                 <h2>Exporter / Importer la configuration</h2>
                 <p class="description">Exportez le fichier commandes.json actuel ou importez un nouveau JSON pour remplacer la configuration.</p>
 
@@ -105,28 +129,15 @@
             </div>
 
             <div class="login-card settings-card">
-                <h2>Changer le préfixe API</h2>
-                <p class="description">Changez le préfixe utilisé pour les appels API.</p>
-                <p class="description">Ancien préfixe : {{ api_prefix }}</p>
-                <form method="post">
-                    <input type="hidden" name="action" value="changeApiPrefix">
-                    <div class="form-group">
-                        <label for="new_prefix">Nouveau préfixe API (sans '/')</label>
-                        <div class="input-wrapper">
-                            <input type="text" id="new_prefix" name="new_prefix" placeholder="nouveau_prefixe" required>
-                        </div>
-                    </div>
-                    {% if api_prefix_erreur %}
-                    <p class="error-message" style="margin-bottom: 16px;">{{ api_prefix_erreur }}</p>
-                    {% endif %}
-                    {% if api_prefix_success %}
-                    <p class="success-message" style="margin-bottom: 16px;">{{ api_prefix_success }}</p>
-                    {% endif %}
-                    <button class="btn-primary" type="submit">
-                        Mettre à jour le préfixe API
-                    </button>
-                </form>
+                <h2>Exporter les logs</h2>
+                <p class="description">Exportez les fichiers de logs. Ils seront téléchargés dans une archive ZIP si plusieurs fichiers existent.</p>
+
+                <div class="button-row">
+                    <a class="btn-secondary" href="/settings/export-logs">Exporter logs</a>
+                </div>
             </div>
+
+            
         </div>
         <footer style="font-size: 0.8em; color: #999; text-align: center;">
             Version {{ config.APP_VERSION }}
