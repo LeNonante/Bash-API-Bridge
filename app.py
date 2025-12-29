@@ -96,6 +96,9 @@ def check_initialisation():
     if request.endpoint=="register" and not (isThereAdmin()):
         return
     
+    if request.endpoint == "documentation": # Permet d'accéder à la doc même sans configurer l'app
+        return
+    
     # Si pas d'admin on force vers /register
     if not isThereAdmin():
         return redirect(url_for('register'))
