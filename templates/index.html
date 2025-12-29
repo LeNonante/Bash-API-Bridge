@@ -26,9 +26,22 @@
             <a href="/" class="nav-link active">Dashboard</a>
             <a href="/settings" class="nav-link">Paramètres</a>
             <a href="/logout" class="nav-link">Déconnexion</a>
-          </div>
+        </div>
+
+        <button class="mobile-menu-toggle" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
       
     </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu">
+        <a href="/" class="mobile-nav-link active">Dashboard</a>
+        <a href="/settings" class="mobile-nav-link">Paramètres</a>
+        <a href="/logout" class="mobile-nav-link">Déconnexion</a>
+    </div>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -170,6 +183,23 @@
     </main>
 
     <script>
+        // Mobile menu toggle
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const mobileMenu = document.querySelector('.mobile-menu');
+        
+        mobileMenuToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.navbar') && !event.target.closest('.mobile-menu')) {
+                mobileMenuToggle.classList.remove('active');
+                mobileMenu.classList.remove('active');
+            }
+        });
+
         // Toggle switches
         document.querySelectorAll('.toggle-switch input').forEach(toggle => {
             toggle.addEventListener('change', function() {
