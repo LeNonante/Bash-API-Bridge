@@ -20,15 +20,15 @@ def api_dynamique_path(full_path):
         with open('commandes.json', 'r') as f:
             routes_data = json.load(f)
     except Exception as e:
-        current_app.logger.error(f"Erreur lecture commandes.json : {str(e)}")
-        return jsonify({"error": "Internal Server Error"}), 500
+        current_app.logger.error(f"Erreur lecture commandes.json : {str(e)}. Utilisation d'une liste vide.")
+        routes_data = []
     
     try:
         with open('blacklist.json', 'r') as f:
             blacklist_data = json.load(f)
     except Exception as e:
-        current_app.logger.error(f"Erreur lecture blacklist.json : {str(e)}")
-        return jsonify({"error": "Internal Server Error"}), 500
+        current_app.logger.error(f"Erreur lecture blacklist.json : {str(e)}. Utilisation d'une liste vide.")
+        blacklist_data = []
     
     blacklist_ips = []  # Liste des IPs en blacklist
     whitelist_ips = []  # Liste des IPs en whitelist
@@ -41,8 +41,8 @@ def api_dynamique_path(full_path):
         with open('whitelist.json', 'r') as f:
             whitelist_data = json.load(f)
     except Exception as e:
-        current_app.logger.error(f"Erreur lecture whitelist.json : {str(e)}")
-        return jsonify({"error": "Internal Server Error"}), 500
+        whitelist_data = []
+        current_app.logger.warning(f"Erreur lecture whitelist.json : {str(e)}. Utilisation d'une liste vide.")
 
     for item in whitelist_data:
         if item['active']:
