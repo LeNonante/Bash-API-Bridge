@@ -43,7 +43,6 @@ handler.setFormatter(logging.Formatter(
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.INFO)
 
-
 pattern_prefix_api = r'^[a-zA-Z0-9]+$'
 pattern_path_route = r'^[a-zA-Z0-9/_-]+$'
 load_dotenv()
@@ -138,7 +137,8 @@ def register():
                     setApiPrefix(".env", api_prefix)
                 else :
                     setApiPrefix(".env", "/bashapi")
-                    return redirect(url_for('login'))  # Rediriger vers la page de connexion après
+                initMode(".env", "WHITELIST") #Initialisation du mode en WHITELIST par défaut
+                return redirect(url_for('login'))  # Rediriger vers la page de connexion après
             
     return render_template('register.html')
 

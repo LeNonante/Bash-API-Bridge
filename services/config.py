@@ -46,3 +46,17 @@ def get_git_version():
         ).decode().strip()
     except Exception:
         return "unknown"
+
+def toggleMode(env_file):
+    current_mode = os.getenv("MODE", "WHITELIST")
+    new_mode = "WHITELIST" if current_mode == "BLACKLIST" else "BLACKLIST"
+    set_key(env_file, "MODE", new_mode)
+    load_dotenv(override=True)
+    return new_mode
+
+def initMode(env_file, mode):
+    set_key(env_file, "MODE", mode)
+    load_dotenv(override=True)
+
+def getMode():
+    return os.getenv("MODE", "WHITELIST")
