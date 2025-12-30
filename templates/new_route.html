@@ -207,8 +207,24 @@
                     this.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copié !';
 
                 } catch (err) {
+                    // En cas d'erreur (HTTP), on tente avec une autre méthode
+                    try {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = "{{ new_token }}";
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+
+                        // Feedback visuel
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copié !';
+                    }
+                    catch (err) { // Si ça échoue encore, on alerte l'utilisateur et on soumet quand même le formulaire
+
                     console.error('Erreur copie:', err);
                     alert("Impossible de copier automatiquement. Token : " + "{{ new_token }}");
+                    }
                 }
             });
         } else {
