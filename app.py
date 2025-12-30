@@ -289,6 +289,38 @@ def settings():
                     context[list_type] = load_ip_list(filename)
             except (ValueError, TypeError):
                 context[f"{list_type}_error"] = "ID invalide."
+                
+        if action == "importWhitelist":
+            uploaded_file = request.files.get("whitelist_file")
+            if uploaded_file is None or uploaded_file.filename == "":
+                context["import_whitelist_error"] = "Aucun fichier sélectionné."
+                return render_template('settings.html', **context)
+
+            if not uploaded_file.filename.lower().endswith(".json"):
+                context["import_whitelist_error"] = "Le fichier doit être au format JSON."
+                return render_template('settings.html', **context)
+
+            save_path = os.path.join(app.root_path, "whitelist.json")
+            uploaded_file.save(save_path)
+            context["import_whitelist_success"] = "Fichier importé et sauvegardé."
+            context["whitelist"] = load_ip_list(os.path.join(app.root_path, "whitelist.json"))
+            return render_template('settings.html', **context)
+        
+        if action == "importBlacklist":
+            uploaded_file = request.files.get("blacklist_file")
+            if uploaded_file is None or uploaded_file.filename == "":
+                context["import_blacklist_error"] = "Aucun fichier sélectionné."
+                return render_template('settings.html', **context)
+
+            if not uploaded_file.filename.lower().endswith(".json"):
+                context["import_blacklist_error"] = "Le fichier doit être au format JSON."
+                return render_template('settings.html', **context)
+
+            save_path = os.path.join(app.root_path, "blacklist.json")
+            uploaded_file.save(save_path)
+            context["import_blacklist_success"] = "Fichier importé et sauvegardé."
+            context["blacklist"] = load_ip_list(os.path.join(app.root_path, "blacklist.json"))
+            return render_template('settings.html', **context)
     
     return render_template('settings.html', **context)
 
