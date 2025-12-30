@@ -112,9 +112,9 @@ Accessible via le menu Paramètres.
 ![Image page de paramètres](/static/docs/settings.png)
 1. **Sauvegarde et Migration**
 
-    - **Exporter commandes.json :** Télécharge un fichier JSON contenant toute votre configuration (routes, commandes, hash des tokens).
+- **Exporter commandes.json :** Télécharge un fichier JSON contenant toute votre configuration (routes, commandes, hash des tokens).
 
-    - **Importer :** Permet de restaurer une configuration ou de la dupliquer sur un autre serveur.
+- **Importer :** Permet de restaurer une configuration ou de la dupliquer sur un autre serveur.
 
 2. **Logs et Audit**
 
