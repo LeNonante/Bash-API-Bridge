@@ -357,6 +357,7 @@ def edit_route(route_id):
     
     if request.method == "POST":
         action = request.form.get("action")
+        print(action)
         if action == "save":
             
             clean_path = request.form.get("path").strip('/').replace(" ", "") #On enlève les slashs de début et fin et les espaces
