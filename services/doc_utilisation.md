@@ -11,7 +11,7 @@ Lors du tout premier lancement de l'application, vous serez automatiquement redi
 
 - **Préfixe API :** Définissez le préfixe de base pour toutes vos routes (par défaut : bashapi).
 
-    Exemple : Si vous mettez v1, vos URLs ressembleront à http://serveur:5000/v1/ma-route.
+    Exemple : Si vous mettez v1, vos URLs ressembleront à http://IP_SERVEUR:PORT/v1/ma-route.
 
 - **Mot de passe Administrateur :** Choisissez un mot de passe fort. Il servira uniquement à accéder à l'interface web.
 
