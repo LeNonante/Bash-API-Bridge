@@ -151,7 +151,7 @@ def update_ip_in_list(filename, ip_id, description=""):
     
     return False, "IP non trouvée"
 
-def create_qr_code(secret_key, email_utilisateur):
+def create_qr_code(secret_key):
     # On prépare les infos pour Google Authenticator
     totp_auth = pyotp.TOTP(secret_key)
     
@@ -165,8 +165,24 @@ def create_qr_code(secret_key, email_utilisateur):
     img.save(nom_fichier)
     return nom_fichier
 
-def verify_code(secret_key, code_entre):
+def get2FASecret():
+    return os.getenv("2FA_SECRET")
+
+def verify_code(code_entre):
+    secret_key = get2FASecret()
     totp = pyotp.TOTP(secret_key)
     # verify() retourne True ou False. 
     # Il gère automatiquement la fenêtre de temps (actuel +/- 30 secondes)
     return totp.verify(code_entre)
+
+def set2FASecret(env_file, secret_key):
+    set_key(env_file, "2FA_SECRET", secret_key)
+    load_dotenv(override=True)
+    
+def isThere2FASecret() :
+    return os.getenv("2FA_SECRET") is not None
+
+def activate_2fa(env_file, activate=True):
+    value = "TRUE" if activate else "FALSE"
+    set_key(env_file, "ENABLE_2FA", value)
+    load_dotenv(override=True)

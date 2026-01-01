@@ -125,6 +125,11 @@ def index():
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
+    if not isThere2FASecret(): #Si pas de clef 2FA
+        # Génération de la clé secrète 2FA
+        secret_2fa = pyotp.random_base32()
+        set2FASecret(".env", secret_2fa)
+        create_qr_code(secret_2fa)
     if request.method == "POST":
         if request.form.get("action")=="createAdminAccount":
             # Traitement du formulaire d'inscription
@@ -135,6 +140,10 @@ def register():
             
             else :        
                 setAdminPassword(".env",admin_password)
+                if request.form.get("enable_2fa") :
+                    activate_2fa(".env", True)
+                else :
+                    activate_2fa(".env", False)
                 api_prefix = request.form.get("prefix")
                 if api_prefix:
                     if not re.match(pattern_prefix_api, api_prefix):

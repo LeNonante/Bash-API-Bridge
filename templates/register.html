@@ -108,6 +108,29 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input 
+                            type="checkbox" 
+                            id="enable_2fa" 
+                            name="enable_2fa"
+                            value="true"
+                        >
+                        <label for="enable_2fa" style="display: inline; margin-left: 8px; cursor: pointer;">
+                            Activer l'authentification à deux facteurs (A2F/OTP)
+                        </label>
+                    </div>
+                    <p class="description" style="margin-top: 8px; font-size: 0.85rem; opacity: 0.7;">
+                        Compatible avec Google Authenticator, Authy, Microsoft Authenticator, etc.
+                    </p>
+                </div>
+
+                <div id="otp-image-wrapper" style="display: none; margin: 12px 0;">
+                            Scannez ce QR Code avec votre application d'authentification pour configurer l'A2F : <br>
+                    <img src="{{ url_for('static', filename='img/qrcode_2fa.png') }}" class="otp-image" alt="Code OTP" style="max-width: 180px;">
+                </div>
+
                 {% if erreur %}
                     <div class="error-message">{{ erreur }}</div>
                 {% endif %}
@@ -163,6 +186,15 @@
                 passwordInput.type = 'password';
             }
         }
+
+        // Montrer/cacher l'image OTP en fonction de la checkbox
+        const enable2fa = document.getElementById('enable_2fa');
+        const otpImg = document.getElementById('otp-image-wrapper');
+
+        enable2fa.addEventListener('change', () => {
+            otpImg.style.display = enable2fa.checked ? 'block' : 'none';
+        });
+
     </script>
 </body>
 </html>
