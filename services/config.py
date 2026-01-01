@@ -6,6 +6,12 @@ import json
 import pyotp
 import qrcode
 import sys
+import time
+
+# Variables globales pour le cache
+LAST_CHECK_TIME = 0
+UPDATE_CACHE_RESULT = False
+CHECK_INTERVAL = 3600  # 1 heure en secondes
 
 def isThereASecretKey() :
     return os.getenv("SECRET_KEY") is not None
@@ -52,7 +58,16 @@ def get_git_version():
         return "unknown"
     
 def check_update_available():
-    """Vérifie si une mise à jour est disponible sur le dépôt distant."""
+    """
+    Vérifie les mises à jour avec un cache.
+    Ne fait le vrai 'git fetch' que si le délai est dépassé.
+    """
+    global LAST_CHECK_TIME, UPDATE_CACHE_RESULT
+    
+    current_time = time.time()
+    if current_time - LAST_CHECK_TIME < CHECK_INTERVAL:
+        return UPDATE_CACHE_RESULT
+    
     try:
         # On met à jour les infos du remote sans modifier les fichiers locaux
         subprocess.run(["git", "fetch"], cwd=os.getcwd(), timeout=10, check=True)
@@ -61,7 +76,14 @@ def check_update_available():
         local = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=os.getcwd()).decode().strip()
         remote = subprocess.check_output(["git", "rev-parse", "@{u}"], cwd=os.getcwd()).decode().strip()
         
-        return local != remote
+        # On met à jour le cache
+        if local != remote:
+            UPDATE_CACHE_RESULT = True
+        else:
+            UPDATE_CACHE_RESULT = False
+            
+        LAST_CHECK_TIME = current_time
+        return UPDATE_CACHE_RESULT
     except Exception as e:
         print(f"Erreur vérification update: {e}")
         return False
