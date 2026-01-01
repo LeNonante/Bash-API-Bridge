@@ -5,6 +5,7 @@ import subprocess
 import json
 import pyotp
 import qrcode
+import sys
 
 def isThereASecretKey() :
     return os.getenv("SECRET_KEY") is not None
@@ -49,6 +50,40 @@ def get_git_version():
         ).decode().strip()
     except Exception:
         return "unknown"
+    
+def check_update_available():
+    """Vérifie si une mise à jour est disponible sur le dépôt distant."""
+    try:
+        # On met à jour les infos du remote sans modifier les fichiers locaux
+        subprocess.run(["git", "fetch"], cwd=os.getcwd(), timeout=10, check=True)
+        
+        # On récupère le hash local et le hash distant
+        local = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=os.getcwd()).decode().strip()
+        remote = subprocess.check_output(["git", "rev-parse", "@{u}"], cwd=os.getcwd()).decode().strip()
+        
+        return local != remote
+    except Exception as e:
+        print(f"Erreur vérification update: {e}")
+        return False
+
+def perform_update():
+    """Télécharge la mise à jour, installe les dépendances et redémarre l'application."""
+    try:
+        # 1. Pull du code
+        subprocess.run(["git", "pull"], cwd=os.getcwd(), check=True)
+        
+        # 2. Mise à jour des dépendances (pip)
+        # On utilise sys.executable pour être sûr d'utiliser le pip du venv actuel
+        subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], cwd=os.getcwd(), check=True)
+        
+        # 3. On quitte l'application. 
+        # Grâce à Restart=always dans le fichier .service, Systemd la relancera tout seul.
+        print("Mise à jour réussie, redémarrage...")
+        sys.exit(0) 
+        
+    except Exception as e:
+        print(f"Erreur lors de la mise à jour: {e}")
+        return False
 
 def toggleMode(env_file):
     current_mode = os.getenv("MODE", "WHITELIST")

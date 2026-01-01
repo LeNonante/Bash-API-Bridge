@@ -46,13 +46,20 @@
     </div>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content">     
+        <button id="btn-update" class="btn-primary btn-update" onclick="lancerMiseAJour()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-5.5 4.5-10 10-10 4.1 0 7.6 2.5 9.1 6.1M22 12c0 5.5-4.5 10-10 10-4.1 0-7.6-2.5-9.1-6.1"/>
+            </svg>
+            Mise à jour disponible
+        </button>
         <div class="page-header">
             <div>
                 <h1>Routes API</h1>
                 <p class="page-description">Configurez les liens entre vos endpoints HTTP et les commandes système.</p>
                 <p class="page-description">Domaine des routes configurées : <code class="domain-code">{{request.host_url}}{{ api_prefix[1:] }}</code></p>
             </div>
+
             <a href="/route/new" style="text-decoration: none;">
             <button class="btn-primary">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -246,6 +253,50 @@
                 }
             });
         });
+
+        // Vérifier les mises à jour au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/update/check')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.update_available) {
+                        const btn = document.getElementById('btn-update');
+                        if(btn) btn.style.display = 'inline-flex';
+                    }
+                })
+                .catch(err => console.error("Erreur check update:", err));
+        });
+
+        function lancerMiseAJour() {
+            if(!confirm("L'application va se mettre à jour et redémarrer. Cela prendra quelques secondes. Continuer ?")) return;
+
+            const btn = document.getElementById('btn-update');
+            btn.disabled = true;
+            btn.innerHTML = "Mise à jour en cours...";
+
+            fetch('/update/apply', { method: 'POST' })
+                .catch(err => {
+                    // Il est normal d'avoir une erreur réseau ici car le serveur coupe la connexion pour redémarrer
+                    console.log("Le serveur redémarre...");
+                });
+
+            // On affiche un overlay ou on attend simplement
+            setTimeout(() => {
+                alert("Mise à jour lancée ! L'application va se recharger.");
+                // On tente de recharger la page toutes les 2 secondes jusqu'à ce que ça marche
+                checkServerBack();
+            }, 2000);
+        }
+
+        function checkServerBack() {
+            setInterval(() => {
+                fetch('/')
+                    .then(response => {
+                        if(response.ok) window.location.reload();
+                    })
+                    .catch(e => { /* Le serveur est encore down, on attend */ });
+            }, 2000);
+        }
     </script>
 </body>
 </html>
