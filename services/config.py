@@ -101,7 +101,7 @@ def perform_update():
         # 3. On quitte l'application. 
         # Grâce à Restart=always dans le fichier .service, Systemd la relancera tout seul.
         print("Mise à jour réussie, redémarrage...")
-        os._exit(0) # On force la fermeture immédiate
+        subprocess.run(["sudo", "systemctl", "restart", "api-bash-bridge"], check=True)
         
     except Exception as e:
         print(f"Erreur lors de la mise à jour: {e}")
