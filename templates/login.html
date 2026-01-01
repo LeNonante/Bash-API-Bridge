@@ -77,7 +77,23 @@
                             </svg>
                         </button>
                     </div>
+                    {% if A2F_enabled %}
+                    <div class="form-group">
+                        <label for="2fa_code">Code 2FA</label>
+                        <div class="otp-inputs">
+                            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        </div>
+                        <input type="hidden" id="2fa_code" name="2fa_code">
+                    </div>
+                    {% endif %}
+
                 </div>
+
 
                 <button type="submit" class="btn-submit" name="action" value="loginUser">
                     Se connecter
@@ -118,6 +134,58 @@
                 passwordInput.type = 'text';
             } else {
                 passwordInput.type = 'password';
+            }
+        }
+
+        // OTP inputs handling
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const otpHidden = document.getElementById('2fa_code');
+
+        otpInputs.forEach((input, index) => {
+            // Quand on tape un chiffre, passer au suivant
+            input.addEventListener('input', (e) => {
+                const value = e.target.value;
+                // Ne garder que le dernier chiffre tapé
+                if (value.length > 1) {
+                    e.target.value = value.slice(-1);
+                }
+                // Passer au champ suivant si c'est un chiffre
+                if (e.target.value.match(/[0-9]/) && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+                updateOtpValue();
+            });
+
+            // Gestion de la touche Backspace
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace') {
+                    if (input.value === '' && index > 0) {
+                        // Si le champ est vide, revenir au précédent et le vider
+                        otpInputs[index - 1].focus();
+                        otpInputs[index - 1].value = '';
+                        updateOtpValue();
+                    }
+                }
+            });
+
+            // Permettre le collage d'un code complet
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                for (let i = 0; i < pastedData.length && i < otpInputs.length; i++) {
+                    otpInputs[i].value = pastedData[i];
+                }
+                if (pastedData.length > 0) {
+                    otpInputs[Math.min(pastedData.length, otpInputs.length - 1)].focus();
+                }
+                updateOtpValue();
+            });
+        });
+
+        function updateOtpValue() {
+            if (otpHidden) {
+                const code = Array.from(otpInputs).map(input => input.value).join('');
+                otpHidden.value = code;
             }
         }
     </script>

@@ -186,3 +186,6 @@ def activate_2fa(env_file, activate=True):
     value = "TRUE" if activate else "FALSE"
     set_key(env_file, "ENABLE_2FA", value)
     load_dotenv(override=True)
+    
+def is2FAEnabled():
+    return os.getenv("ENABLE_2FA", "FALSE") == "TRUE"

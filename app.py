@@ -160,7 +160,7 @@ def register():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    
+    A2F_enabled = is2FAEnabled()
     if request.method == "POST":
         if request.form.get("action")=="loginUser":
             # Traitement du formulaire d'inscription
@@ -172,7 +172,7 @@ def login():
             else:
                 return render_template('login.html', erreur="Mot de passe administrateur incorrect.")
             
-    return render_template('login.html')
+    return render_template('login.html', A2F_enabled=A2F_enabled)
 
 
 @app.route('/logout')
