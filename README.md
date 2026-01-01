@@ -15,6 +15,7 @@ C'est l'outil idéal pour piloter un serveur, lancer des scripts de maintenance,
 * **Sécurisé :**
     * Protection des routes sensibles via **Bearer Token** (hashé, jamais stocké en clair).
     * Interface d'administration protégée par un mot de passe (défini à la première connexion).
+    * **Support de l'Authentification à Deux Facteurs (A2F/OTP) :** Compatible avec Google Authenticator, Authy, etc.
 * **Traçabilité :** Des fichiers de logs permettent de tracer chaque requêtes faites à l'API (avec un identifiant par requête ainsi que l'adresse IP de la source).
 * **Multi-OS :** Fonctionne sur **Linux** (idéal serveur) et **Windows** (dev/local).
 * **Prefix API Configurable :** Changez le préfixe de base (ex: `/api/v1`) depuis l'interface.
@@ -93,9 +94,10 @@ tail -f /opt/api-bash-bridge/api-activity.log
 
 ## 🛡️ Avertissement de Sécurité
 ⚠️ ATTENTION : Cette application donne un pouvoir de contrôle sur votre machine.
-- Exposition : Ne l'exposez JAMAIS directement sur internet (Port Forwarding) sans protection.
-- Accès distant : Utilisez un VPN (Tailscale, Wireguard), un Tunnel Cloudflare (avec protection Access/Zero Trust) ou un Reverse Proxy (Nginx/Traefik) avec authentification forte.
-- Commandes : Soyez prudent avec les commandes que vous configurez (évitez les rm -rf non contrôlés).
+- **Exposition :** Ne l'exposez JAMAIS directement sur internet (Port Forwarding) sans protection.
+- **Accès distant :** Utilisez un VPN (Tailscale, Wireguard), un Tunnel Cloudflare (avec protection Access/Zero Trust) ou un Reverse Proxy (Nginx/Traefik) avec authentification forte.
+- **Commandes :** Soyez prudent avec les commandes que vous configurez (évitez les rm -rf non contrôlés).
+- **Accès :** Activez l'Authentification à Deux Facteurs (A2F) lors de la configuration ou dans les paramètres pour sécuriser l'accès au tableau de bord.
 ---
 
 ## 👤 Auteur
