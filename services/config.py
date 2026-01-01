@@ -159,22 +159,8 @@ def create_qr_code(secret_key):
     uri = totp_auth.provisioning_uri( 
         issuer_name="API-Bash Bridge"
     )
-    
-    # Configuration avancée du QR Code
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_H, # Haute correction d'erreur
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(uri)
-    qr.make(fit=True)
 
-    # Personnalisation aux couleurs de l'app
-    # fill_color = Les points (bleu sombre #0f172a)
-    # back_color = Le fond (cyan #22d3ee)
-    img = qr.make_image(fill_color="#0f172a", back_color="#22d3ee")
-
+    img = qrcode.make(uri)
     nom_fichier = "static/img/qrcode_2fa.png"
     img.save(nom_fichier)
     return nom_fichier
