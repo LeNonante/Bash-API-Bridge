@@ -101,7 +101,7 @@ def perform_update():
         # 3. On quitte l'application. 
         # Grâce à Restart=always dans le fichier .service, Systemd la relancera tout seul.
         print("Mise à jour réussie, redémarrage...")
-        sys.exit(0) 
+        os._exit(0) # On force la fermeture immédiate
         
     except Exception as e:
         print(f"Erreur lors de la mise à jour: {e}")
