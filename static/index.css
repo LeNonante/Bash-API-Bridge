@@ -234,7 +234,7 @@ body {
 }
 
 .btn-update {
-    display: inline-flex;
+    display: none;
     background-color: #f59e0b;
     margin-right: 10px;
     margin-bottom: 24px;

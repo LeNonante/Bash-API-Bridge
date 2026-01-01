@@ -18,6 +18,7 @@ from io import BytesIO
 import ipaddress
 from markdown import markdown
 import time
+import sys
 
 app = Flask(__name__)
 
@@ -582,6 +583,22 @@ def documentation():
         md_content = f.read()
     html_content = markdown(md_content, extensions=['fenced_code', 'codehilite'])
     return render_template('docs.html', content=html_content)
+
+
+@app.route('/update/check', methods=['GET'])
+@login_required
+def check_update():
+    is_available = check_update_available()
+    return jsonify({"update_available": is_available})
+
+@app.route('/update/apply', methods=['POST'])
+@login_required
+def apply_update():
+    # On lance la mise à jour
+    # Note : Cette fonction va tuer le processus, donc le retour JSON peut ne jamais arriver au client
+    # C'est pourquoi on gère ça côté JS.
+    perform_update()
+    return jsonify({"status": "updating"}), 200
 
 try:
     PORT=int(os.getenv("PORT", 5000))
