@@ -33,7 +33,7 @@ Une fois connecté, vous arrivez sur le tableau de bord principal. C'est ici que
 
 - **Statistiques :** Vue rapide sur le nombre de routes actives et inactives.
 
-- **Barre de recherche :** Filtrez vos routes par nom, méthode ou commande.
+- **Barre de recherche :** Filtrez vos routes par nom, méthode, tag ou commande.
 
 - Liste des routes :
 
@@ -55,6 +55,8 @@ Cliquez sur le bouton Ajouter une route en haut à droite du dashboard.
 - **Endpoint Path :** Le chemin de l'URL (ex: deploy/mon-site).
 
     - **Attention :** Ne mettez pas le préfixe API ici, il est ajouté automatiquement.
+
+- **Tags :** Entre les étiquettes associées à cette route, séparées par des virgules. 
 
 - **Script Bash :** Entrez les commandes à exécuter.
 
