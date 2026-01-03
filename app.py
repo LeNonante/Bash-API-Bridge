@@ -774,6 +774,13 @@ def apply_update():
     perform_update()
     return jsonify({"status": "updating"}), 200
 
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    # On renvoie le template 429.html avec le code d'erreur 429
+    # e.description contient le message "5 per minute" par exemple
+    return render_template('429.html', error=e), 429
+
 try:
     PORT=int(os.getenv("PORT", 5000))
 except:

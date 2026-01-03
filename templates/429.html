@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trop de requêtes - API-Bash Bridge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='register_login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.1);">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="9" x2="12" y2="13" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1>Trop de tentatives</h1>
+            <p class="subtitle">Sécurité Anti-Bruteforce</p>
+        </div>
+
+        <div class="login-card" style="text-align: center;">
+            <h2 style="color: #ef4444;">Accès temporairement bloqué</h2>
+            <p class="description">
+                Vous avez effectué trop de tentatives de connexion en peu de temps.
+                <br><br>
+                <strong>Limite atteinte : {{ error.description }}</strong>
+            </p>
+            
+            <p class="description" style="margin-bottom: 24px;">
+                Veuillez patienter quelques instants avant de réessayer.
+            </p>
+
+            <a href="{{ url_for('login') }}" class="btn-submit" style="text-decoration: none; display: inline-flex; width: auto;">
+                Retour à la connexion
+            </a>
+        </div>
+        
+        <footer>
+            <p class="copyright">© 2025 - LeNonante - API-Bash Bridge</p>
+        </footer>
+    </div>
+</body>
+</html>
