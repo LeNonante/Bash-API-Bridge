@@ -129,6 +129,24 @@
                             <input type="text" name="tags" class="form-input" placeholder="deploy, prod" value="{{ route.tags|join(', ') if route.tags else '' }}">
                         </div>
                     </div>
+
+                    <div class="form-group" style="padding-top: 42px; padding-left: 30px;">
+                        <div class="checkbox-wrapper" style="display: flex; align-items: flex-start;">
+                            <input 
+                                type="checkbox" 
+                                id="return_output" 
+                                name="return_output" 
+                                style="width: 18px; height: 18px; margin-right: 12px; margin-top: 2px; cursor: pointer; flex-shrink: 0;"
+                                {% if route.return_output %}checked{% endif %}
+                            >
+                            <label for="return_output" style="cursor: pointer; font-weight: 600; font-size: 0.85em; display: block; margin-bottom: 4px; color: #f8fafc; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Retourner la sortie de la commande dans la réponse API
+                            </label>
+                        </div>
+                        <p class="description-variables" style="margin: 0; font-size: 0.8em; line-height: 1.4; color: #94a3b8;">
+                            Si activé, le JSON de retour contiendra un champ <code>"output"</code> avec le texte affiché par le script (stdout).
+                        </p>
+                    </div>
                 </div>
 
                 <div class="script-section">

@@ -618,6 +618,7 @@ def edit_route(route_id):
                     route_to_edit["description"] = request.form.get("description")
                     route_to_edit["command"] = request.form.get("command")
                     route_to_edit["tags"] = [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
+                    route_to_edit["return_output"] = request.form.get("return_output") == "on"
                     
                     with open(commands_path, "w", encoding="utf-8") as f:
                         json.dump(routes, f, indent=4, ensure_ascii=False)
@@ -628,6 +629,8 @@ def edit_route(route_id):
             route["description"] = request.form.get("description")
             route["command"] = request.form.get("command")         
             route["tags"] = [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
+            route["return_output"] = request.form.get("return_output") == "on"
+
             context["success"] = "Route sauvegardée avec succès."
             return render_template('edit_route.html', **context)
         
@@ -708,7 +711,8 @@ def create_route():
             "command": request.form.get("command"),
             "active": True,
             "hashed_token": generate_password_hash(request.form.get("token_value")),
-            "tags": [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
+            "tags": [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()],
+            "return_output": request.form.get("return_output") == "on"
         }
         
         if not re.match(pattern_path_route, path):
