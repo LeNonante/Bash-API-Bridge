@@ -87,7 +87,8 @@ def api_dynamique_path(full_path):
                             try:
                                 # Copier l'environnement actuel pour y ajouter des variables
                                 env_vars = os.environ.copy()
-
+                                capture_output = route.get('return_output', False)
+                                
                                 # Injecter les paramètres d'URL (ex: ?dossier=test -> PARAM_DOSSIER=test)
                                 for key, value in request.args.items():
                                     env_vars[f"PARAM_{key.upper()}"] = str(value)
@@ -97,8 +98,32 @@ def api_dynamique_path(full_path):
                                     for key, value in request.json.items():
                                         env_vars[f"PARAM_{key.upper()}"] = str(value)
                                                                         
-                                subprocess.run(shell_command, shell=True, env=env_vars, timeout=60) # Exécuter la commande shell avec un timeout de 60 secondes
-                                return jsonify({"message": f"Commande exécutée: {stocked_command}"}), 200
+                                result = subprocess.run(
+                                    shell_command, 
+                                    shell=True, 
+                                    env=env_vars, 
+                                    timeout=60,
+                                    capture_output=capture_output, # Capture si demandé
+                                    text=True # Pour avoir des string au lieu de bytes
+                                )
+                                
+                                response = {
+                                    "message": f"Commande exécutée: {stocked_command}",
+                                    "status": result.returncode
+                                }
+                                
+                                # Si on doit retourner la sortie, on l'ajoute au JSON
+                                if capture_output:
+                                    # On combine stdout et stderr pour tout avoir
+                                    output_content = ""
+                                    if result.stdout:
+                                        output_content += result.stdout
+                                    if result.stderr:
+                                        output_content += "\n[STDERR]\n" + result.stderr
+                                        
+                                    response["output"] = output_content.strip()
+                                    
+                                return jsonify(response), 200
                             except Exception as e:
                                 current_app.logger.error(f"Erreur execution bash: {str(e)}")
                                 return jsonify({"error": "Internal Server Error"}), 500
