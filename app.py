@@ -242,7 +242,7 @@ def settings():
         context["blacklist"] = []
     context["a2f_enabled"] = is2FAEnabled()
     
-    if request.method == "POST":
+    if request.method == "POST>":
         # Ici, on ne met PAS de verrou, car les fonctions appelées le font déjà.
         action = request.form.get("action")
         
@@ -604,6 +604,7 @@ def edit_route(route_id):
                     route_to_edit["method"] = request.form.get("method")
                     route_to_edit["description"] = request.form.get("description")
                     route_to_edit["command"] = request.form.get("command")
+                    route_to_edit["tags"] = [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
                     
                     with open(commands_path, "w", encoding="utf-8") as f:
                         json.dump(routes, f, indent=4, ensure_ascii=False)
@@ -613,7 +614,7 @@ def edit_route(route_id):
             route["method"] = request.form.get("method")
             route["description"] = request.form.get("description")
             route["command"] = request.form.get("command")         
-            
+            route["tags"] = [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
             context["success"] = "Route sauvegardée avec succès."
             return render_template('edit_route.html', **context)
         
@@ -693,7 +694,8 @@ def create_route():
             "description": request.form.get("description"),
             "command": request.form.get("command"),
             "active": True,
-            "hashed_token": generate_password_hash(request.form.get("token_value"))
+            "hashed_token": generate_password_hash(request.form.get("token_value")),
+            "tags": [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
         }
         
         if not re.match(pattern_path_route, path):
