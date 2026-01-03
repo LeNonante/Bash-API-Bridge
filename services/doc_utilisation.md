@@ -66,6 +66,8 @@ Cliquez sur le bouton Ajouter une route en haut à droite du dashboard.
 
 - **Description :** (Optionnel) Un mémo pour vous rappeler à quoi sert cette route.
 
+- **Retourner la sortie de la commande :** Si coché, le texte affiché par votre script (via `echo`, `cat`, etc.) sera renvoyé dans le corps de la réponse API. Utile pour récupérer des informations (ex: version d'un logiciel, contenu d'un fichier).
+
 - **Token :** Un token de sécurité est généré automatiquement (voir section Sécurité).
 
 ### Tester une route (Sandbox)
@@ -141,6 +143,26 @@ curl -X POST http://votre-serveur:5000/bashapi/deploy \
 Le token est récupérable uniquement dans la page Éditer la route ou lors de la création. Utilisez le bouton "Copier" situé dans la zone "Détails" ou "Zone de Danger".
 
 - **Sécurité :** Les tokens sont stockés de manière hachée (chiffrée) dans la base de données. Il est impossible de retrouver un token enregistré. Ainsi, lorsque vous copiez un token depuis la page d'édition d'une route, un nouveau token est généré ce qui invalide les anciens tokens de cette route. (Cela n'est pas le cas sur la page de création d'une route. Vous pouvez copier le token autant de fois que vous le souhaitez).
+
+### Format de réponse
+
+Par défaut, l'API renvoie :
+```json
+{
+  "message": "Commande exécutée: ...",
+  "status": 0
+}
+```
+
+Si l'option **"Retourner la sortie"** est activée pour la route, un champ `output` s'ajoute :
+
+```json
+{
+  "message": "Commande exécutée: cat mon_fichier.txt",
+  "status": 0,
+  "output": "Contenu du fichier texte..."
+}
+```
 
 ## ⚙️ Paramètres et Sécurité
 

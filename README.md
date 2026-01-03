@@ -13,6 +13,7 @@ C'est l'outil idéal pour piloter un serveur, lancer des scripts de maintenance,
 * **Routing Dynamique :** Ajoutez ou modifiez des routes via une interface web moderne sans redémarrer le serveur.
 * **Gestion fine des liaisons :** Activez et désactivez des liaisons routes API / commandes en un seul clic.
 * **Paramètres Dynamiques :** Injectez des variables dans vos scripts (ex: noms de dossiers, utilisateurs) directement via l'URL ou un payload JSON.
+* **Retour de Sortie (Optionnel) :** Possibilité de récupérer la sortie texte (stdout) de la commande exécutée directement dans la réponse JSON de l'appel à l'API.
 * **Sécurisé :**
     * Protection des routes sensibles via **Bearer Token** (hashé, jamais stocké en clair).
     * Interface d'administration protégée par un mot de passe (défini à la première connexion).
