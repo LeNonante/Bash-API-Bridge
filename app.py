@@ -19,8 +19,10 @@ import ipaddress
 from markdown import markdown
 import time
 import sys
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
+csrf = CSRFProtect(app) # Active la protection sur toute l'app. Permet d'ajouter des tokens CSRF uniques dans les formulaires.
 
 # Création d'un filtre qui injecte l'ID dans chaque log
 class RequestIdFilter(logging.Filter):
