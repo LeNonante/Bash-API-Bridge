@@ -88,6 +88,8 @@ app.wsgi_app = ProxyFix(
 )
 app.register_blueprint(api_bp) #Enregistrement du blueprint de l'API dynamique. Comme on veut un prefixe qui peut changer sans redemarrer l'app, on le gère dans le blueprint lui mêmeet pas ici (qui est plus porpre pour un prefixe fixe).
 app.config["APP_VERSION"] = get_git_version()
+limiter.limit("60 per minute")(api_bp) # Limite spécifique pour l'API dynamique : 60 requêtes par minute par IP
+
 
 if not isThereASecretKey(): #Si pas de clef secrete (utilisée pour les sessions)
     # Générer une clé secrète aléatoire et la stocker dans le .env
