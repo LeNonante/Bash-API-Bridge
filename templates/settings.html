@@ -26,6 +26,9 @@
         <div class="nav-center">
             <a href="/" class="nav-link">Dashboard</a>
             <a href="/logs" class="nav-link">Logs</a>
+            {% if is_admin %}
+                <a href="/users" class="nav-link">Utilisateurs</a>
+            {% endif %}
             <a href="/settings" class="nav-link active">Paramètres</a>
             <a href="/logout" class="nav-link">Déconnexion</a>
             <a href="/docs" class="nav-link">Documentation</a>
@@ -43,6 +46,9 @@
     <div class="mobile-menu">
         <a href="/" class="mobile-nav-link">Dashboard</a>
         <a href="/logs" class="mobile-nav-link">Logs</a>
+        {% if is_admin %}
+            <a href="/users" class="mobile-nav-link">Utilisateurs</a>
+        {% endif %}
         <a href="/settings" class="mobile-nav-link active">Paramètres</a>
         <a href="/logout" class="mobile-nav-link">Déconnexion</a>
         <a href="/docs" class="mobile-nav-link">Documentation</a>
@@ -59,7 +65,7 @@
 
             <!-- Changer le mot de passe -->
             <div class="login-card settings-card">
-                <h2>Changer le mot de passe administrateur</h2>
+                <h2>Changer le mot de passe de votre compte</h2>
                 <p class="description">Saisissez votre ancien mot de passe, puis le nouveau (deux fois) pour confirmer.</p>
 
                 <form method="post">
@@ -99,7 +105,7 @@
 
             <div class="login-card settings-card">
                 <h2>Sécurité A2F (OTP)</h2>
-                <p class="description">Gérez l'authentification à deux facteurs pour renforcer la sécurité de l'accès administrateur.</p>
+                <p class="description">Gérez l'authentification à deux facteurs pour renforcer la sécurité de l'accès à votre compte.</p>
 
                 {% if a2f_error %}
                 <p class="error-message" style="margin-bottom: 16px;">{{ a2f_error }}</p>
@@ -120,7 +126,7 @@
                 {% if show_qrcode %}
                 <div style="text-align: center; margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px;">
                     <p style="margin-bottom: 12px; color: #e2e8f0;">Scannez ce code avec Google Authenticator ou Authy :</p>
-                    <img src="{{ url_for('static', filename='img/qrcode_2fa.png') }}?t={{ qr_timestamp }}" alt="QR Code A2F" style="max-width: 200px; border-radius: 8px; border: 4px solid white;">
+                    <img src="data:image/png;base64,{{ img_qr_code }}" alt="QR Code 2FA" style="max-width: 200px; border-radius: 8px; border: 4px solid white;">
                 </div>
                 {% endif %}
 
@@ -132,7 +138,7 @@
                         <div class="form-group">
                             <label for="current_password_2fa">Mot de passe actuel requis pour modification</label>
                             <div class="input-wrapper">
-                                <input type="password" id="current_password_2fa" name="current_password_2fa" placeholder="Votre mot de passe admin" required>
+                                <input type="password" id="current_password_2fa" name="current_password_2fa" placeholder="Votre mot de passe" required>
                             </div>
                         </div>
                         

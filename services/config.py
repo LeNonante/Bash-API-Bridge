@@ -9,8 +9,11 @@ import sys
 import time
 from filelock import FileLock
 from database.extensions import db
-from database.models import Route, AccessRule
+from database.models import Route, AccessRule, User
 from sqlalchemy.exc import IntegrityError
+import io
+import base64
+import secrets
 
 
 # Variables globales pour le cache
@@ -30,16 +33,88 @@ def getSecretKey() :
     return os.getenv("SECRET_KEY")
 
 def isThereAdmin() :
-    return os.getenv("ADMIN_PASSWORD") is not None
+    admin = User.query.filter_by(username="admin").first()
+    return admin is not None
 
-def setAdminPassword(env_file,password) :
+def setAdminPassword(password) :
     hashed_password=generate_password_hash(password)
-    set_key(env_file, "ADMIN_PASSWORD", hashed_password)
-    load_dotenv(override=True)
+    if isThereAdmin() :
+        #Modification du mot de passe admin existant
+        admin = User.query.filter_by(username="admin").first()
+        admin.password_hash = hashed_password
+        db.session.commit()
+    else :
+        #Création du compte admin
+        admin = User(
+            username="admin",
+            password_hash=hashed_password
+        )
+        db.session.add(admin)
+        db.session.commit()
 
-def checkAdminPassword(password) :
-    registered_password = os.getenv("ADMIN_PASSWORD")
-    return check_password_hash(registered_password, password)
+def setUserPassword(username, password) :
+    hashed_password=generate_password_hash(password)
+    user = User.query.filter_by(username=username).first()
+    if user:
+        user.password_hash = hashed_password
+        db.session.commit()
+        return True
+    return False
+
+def list_users():
+    users = User.query.order_by(User.username.asc()).all()
+    result = []
+    for user in users:
+        result.append({
+            "username": user.username,
+            "is_admin": user.username == "admin",
+            "is_2fa_enabled": user.is_2fa_enabled,
+        })
+    return result
+
+def create_user(username, password=None):
+    if not username:
+        return False, None, "Le nom d'utilisateur est requis."
+    if username == "admin":
+        return False, None, "Le compte admin se gère depuis Paramètres."
+    if User.query.filter_by(username=username).first():
+        return False, None, "Cet utilisateur existe déjà."
+
+    final_password = password if password else secrets.token_urlsafe(10)
+    new_user = User(username=username, password_hash=generate_password_hash(final_password))
+    db.session.add(new_user)
+    try:
+        db.session.commit()
+        return True, final_password, "Utilisateur créé avec succès."
+    except IntegrityError:
+        db.session.rollback()
+        return False, None, "Impossible de créer l'utilisateur (doublon)."
+
+def delete_user(username):
+    if username == "admin":
+        return False, "Impossible de supprimer le compte admin."
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return False, "Utilisateur introuvable."
+    db.session.delete(user)
+    db.session.commit()
+    return True, "Utilisateur supprimé avec succès."
+
+def reset_user_password(username, password=None):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return False, None, "Utilisateur introuvable."
+
+    new_password = password if password else secrets.token_urlsafe(10)
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+    return True, new_password, "Mot de passe mis à jour."
+
+def checkUserPassword(username, password) :
+    user = User.query.filter_by(username=username).first()
+    if user:
+        return check_password_hash(user.password_hash, password)
+    return False
 
 def getApiPrefix():
     prefix = os.getenv("API_PREFIX")
@@ -146,38 +221,60 @@ def create_qr_code(secret_key):
     
 
     img = qrcode.make(uri)
-    nom_fichier = "static/img/qrcode_2fa.png"
 
-    # S'assurer que le dossier existe avant de sauvegarder
-    os.makedirs(os.path.dirname(nom_fichier), exist_ok=True)
+    # 1. On crée un tampon mémoire (comme un fichier virtuel)
+    buffer = io.BytesIO()
+    
+    # 2. On sauvegarde l'image dans ce tampon au format PNG
+    img.save(buffer, format="PNG")
+    
+    # 3. On récupère les bytes, on encode en base64, et on decode en string utf-8
+    img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    
+    return img_str
 
-    img.save(nom_fichier)
-    return nom_fichier
+def get2FASecret(username):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        return user.two_fa_secret
+    return None
 
-def get2FASecret():
-    return os.getenv("2FA_SECRET")
-
-def verify_code(code_entre):
-    secret_key = get2FASecret()
+def verify_code(username, code_entre):
+    secret_key = get2FASecret(username)
     totp = pyotp.TOTP(secret_key)
     # verify() retourne True ou False. 
     # Il gère automatiquement la fenêtre de temps (actuel +/- 30 secondes)
     return totp.verify(code_entre)
 
-def set2FASecret(env_file, secret_key):
-    set_key(env_file, "2FA_SECRET", secret_key)
-    load_dotenv(override=True)
-    
-def isThere2FASecret() :
-    return os.getenv("2FA_SECRET") is not None
+def set2FASecret(username, secret_key):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        user.two_fa_secret = secret_key
+        db.session.commit()
+        return True
+    return False
 
-def activate_2fa(env_file, activate=True):
-    value = "TRUE" if activate else "FALSE"
-    set_key(env_file, "ENABLE_2FA", value)
-    load_dotenv(override=True)
+def isThere2FASecret(username) :
+    secret_key = get2FASecret(username)
+    return secret_key is not None
+
+def activate_2fa(username, activate=True):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        user.is_2fa_enabled = activate
+        if activate and not user.two_fa_secret:
+            # Génération d'une nouvelle clé secrète si on active 2FA et qu'il n'y en a pas
+            secret_2fa = pyotp.random_base32()
+            user.two_fa_secret = secret_2fa
+        db.session.commit()
+        return True
+    return False
     
-def is2FAEnabled():
-    return os.getenv("ENABLE_2FA", "FALSE") == "TRUE"
+def is2FAEnabled(username):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        return user.is_2fa_enabled
+    return False
     
     
 #SQL ALCHEMY FUNCTIONS---------------------------

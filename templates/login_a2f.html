@@ -52,45 +52,14 @@
         </div>
 
         <div class="login-card">
-            <h2>Connexion</h2>
-            <p class="description">Veuillez vous authentifier pour gérer les routes API et les commandes système.</p>
+            <h2>Connexion au compte {{ username }}</h2>
+            <p class="description">Vérification de la double authentification</p>
             
-            <form method="post" action="/login">
+            <form method="post" action="/two_fa">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 {% if erreur %}
                     <div class="error-message">{{ erreur }}</div>
                 {% endif %}
-                <div class="form-group">
-                    <label for="username">Nom d'utilisateur</label>
-                    <div class="input-wrapper">
-                        <input 
-                            type="text" 
-                            id="username" 
-                            name="username"
-                            placeholder="Entrez le nom d'utilisateur"
-                            autocomplete="username"
-                            required
-                        >
-                    </div>
-
-                    <label for="password">Mot de passe</label>
-                    <div class="input-wrapper">
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password"
-                            placeholder="Entrez le mot de passe"
-                            autocomplete="current-password"
-                            required
-                        >
-                        <button type="button" class="toggle-password" onclick="togglePassword()">
-                            <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 5C7 5 2.73 8.11 1 12.5 2.73 16.89 7 20 12 20s9.27-3.11 11-7.5C21.27 8.11 17 5 12 5z" stroke="currentColor" stroke-width="2"/>
-                                <circle cx="12" cy="12.5" r="3.5" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                        </button>
-                    </div>
-                    {% if A2F_enabled %}
                     <div class="form-group" style="margin-top: 24px;">
                         <label for="2fa_code">Code 2FA</label>
                         <div class="otp-inputs">
@@ -103,10 +72,6 @@
                         </div>
                         <input type="hidden" id="2fa_code" name="2fa_code">
                     </div>
-                    {% endif %}
-
-                </div>
-                <p class="description">Mot de passe oublié ? Contactez l'administrateur.</p>
 
                 <button type="submit" class="btn-submit" name="action" value="loginUser">
                     Se connecter

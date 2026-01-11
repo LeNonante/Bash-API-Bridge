@@ -163,17 +163,12 @@ def index():
     nb_etats={False:0,True:0}
     for route in routes:
             nb_etats[route["active"]]+=1
-            
-    return render_template('index.html', routes=routes, api_prefix=getApiPrefix(), total_routes=len(routes), active_routes=nb_etats[True], inactive_routes=nb_etats[False])
+    is_admin = (current_user.id == 'admin')        
+    return render_template('index.html', routes=routes, api_prefix=getApiPrefix(), total_routes=len(routes), active_routes=nb_etats[True], inactive_routes=nb_etats[False], is_admin=is_admin)
 
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
-    if not isThere2FASecret(): #Si pas de clef 2FA
-        # Génération de la clé secrète 2FA
-        secret_2fa = pyotp.random_base32()
-        set2FASecret(".env", secret_2fa)
-        create_qr_code(secret_2fa)
     if request.method == "POST":
         if request.form.get("action")=="createAdminAccount":
             # Traitement du formulaire d'inscription
@@ -183,11 +178,7 @@ def register():
                 return render_template('register.html', erreur="Les mots de passe ne correspondent pas. Veuillez réessayer.")
             
             else :        
-                setAdminPassword(".env",admin_password)
-                if request.form.get("enable_2fa") :
-                    activate_2fa(".env", True)
-                else :
-                    activate_2fa(".env", False)
+                setAdminPassword(admin_password)
                 api_prefix = request.form.get("prefix")
                 if api_prefix:
                     if not re.match(pattern_prefix_api, api_prefix):
@@ -205,23 +196,44 @@ def register():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    A2F_enabled = is2FAEnabled()
     if request.method == "POST":
         if request.form.get("action")=="loginUser":
             # Traitement du formulaire d'inscription
+            username = request.form.get("username")
             password = request.form.get("password")
-            if checkAdminPassword(password):
+            A2F_enabled = is2FAEnabled(username)
+            if checkUserPassword(username, password): #Si le mot de passe est correct
                 if A2F_enabled:
-                    code_2fa = request.form.get("2fa_code")
-                    if not verify_code(code_2fa):
-                        return render_template('login.html', erreur="Code 2FA incorrect.", A2F_enabled=A2F_enabled)
-                login_user(User("admin"))
-                return redirect(url_for('index'))  # Rediriger vers la page d'accueil après la connexion
+                    # STOCKAGE TEMPORAIRE DANS LA SESSION
+                    # On ne connecte pas encore l'utilisateur, on le met "en attente"
+                    session['pending_2fa_user'] = username
+                    return redirect(url_for('two_fa'))
+                else :
+                    login_user(User(username))
+                    session.pop('pending_2fa_user', None) # Nettoyage de sécurité
+                    return redirect(url_for('index'))  # Rediriger vers la page d'accueil après la connexion
             else:
-                return render_template('login.html', erreur="Mot de passe administrateur incorrect.", A2F_enabled=A2F_enabled)
+                return render_template('login.html', erreur="Nom d'utilisateur ou mot de passe incorrect.")
             
-    return render_template('login.html', A2F_enabled=A2F_enabled)
+    return render_template('login.html')
 
+@app.route('/two_fa', methods=["GET", "POST"])
+def two_fa():
+    username = session.get('pending_2fa_user')
+    if not username:
+        return redirect(url_for('login'))
+    if request.method == "POST":
+        if request.form.get("action")=="loginUser":
+            code_2fa = request.form.get("2fa_code")
+            if verify_code(username, code_2fa):
+                # Code 2FA correct, on connecte l'utilisateur
+                login_user(User(username))
+                session.pop('pending_2fa_user', None) # Nettoyage de sécurité
+                return redirect(url_for('index'))
+            else:
+                return render_template('login_a2f.html', username=username, erreur="Code 2FA incorrect. Veuillez réessayer.")
+    return render_template('login_a2f.html', username=username)
+    
 
 @app.route('/logout')
 @login_required
@@ -239,12 +251,13 @@ def logout():
 @login_required
 def settings():
     context = {}
+    context["is_admin"] = (current_user.id == 'admin')
     context["api_prefix"] = getApiPrefix()[:-1]
     context["current_mode"] = getMode()
     
     context["whitelist"] = get_whitelist()
     context["blacklist"] = get_blacklist()
-    context["a2f_enabled"] = is2FAEnabled()
+    context["a2f_enabled"] = is2FAEnabled(current_user.id)
     
     if request.method == "POST":
         # Ici, on ne met PAS de verrou, car les fonctions appelées le font déjà.
@@ -254,9 +267,9 @@ def settings():
             current_password = request.form.get("current_password")
             new_password1 = request.form.get("new_password1")
             new_password2 = request.form.get("new_password2")
-
+            username = current_user.id
             # Vérifier l'ancien mot de passe
-            if not checkAdminPassword(current_password):
+            if not checkUserPassword(username, current_password):
                 context["erreur"] = "Ancien mot de passe incorrect."
                 return render_template('settings.html', **context)
 
@@ -266,7 +279,7 @@ def settings():
                 return render_template('settings.html', **context)
 
             # Mettre à jour le mot de passe admin
-            setAdminPassword(".env", new_password1)
+            setUserPassword(username, new_password1)
             context["success"] = "Mot de passe mis à jour avec succès."
             return render_template('settings.html', **context)
 
@@ -384,42 +397,86 @@ def settings():
 
             # Pour désactiver ou régénérer, on vérifie le mot de passe par sécurité
             if sub_action in ["disable", "regenerate"]:
-                if not current_password or not checkAdminPassword(current_password):
+                if not current_password or not checkUserPassword(current_user.id, current_password):
                     context["a2f_error"] = "Mot de passe incorrect. Impossible de modifier l'A2F."
                     return render_template('settings.html', **context)
 
             if sub_action == "enable":
                 # Générer un secret s'il n'existe pas ou utiliser l'existant
-                if not isThere2FASecret():
+                if not isThere2FASecret(current_user.id):
                     secret = pyotp.random_base32()
-                    set2FASecret(".env", secret)
+                    set2FASecret(current_user.id, secret)
                 else:
-                    secret = get2FASecret() # On récupère via la fonction existante dans config.py
+                    secret = get2FASecret(current_user.id) # On récupère via la fonction existante dans config.py
                 
-                create_qr_code(secret)
-                activate_2fa(".env", True)
+                img_qr_code = create_qr_code(secret)
+                activate_2fa(current_user.id, True)
                 context["a2f_success"] = "A2F Activée. Scannez le QR Code ci-dessous."
                 context["show_qrcode"] = True
+                context["img_qr_code"] = img_qr_code
                 
             elif sub_action == "disable":
-                activate_2fa(".env", False)
+                activate_2fa(current_user.id, False)
                 context["a2f_success"] = "Authentification à deux facteurs désactivée."
                 
             elif sub_action == "regenerate":
                 # On écrase l'ancien secret
                 secret = pyotp.random_base32()
-                set2FASecret(".env", secret)
-                create_qr_code(secret)
+                set2FASecret(current_user.id, secret)
+                img_qr_code = create_qr_code(secret)
                 # On s'assure qu'elle est bien activée
-                activate_2fa(".env", True)
+                activate_2fa(current_user.id, True)
                 context["a2f_success"] = "Nouveau secret généré. Veuillez scanner le nouveau QR Code."
                 context["show_qrcode"] = True
-
+                context["img_qr_code"] = img_qr_code
             # Mise à jour de l'état pour l'affichage
-            context["a2f_enabled"] = is2FAEnabled()
+            context["a2f_enabled"] = is2FAEnabled(current_user.id)
             # Ajout d'un timestamp pour forcer le navigateur à recharger l'image du QR Code
             context["qr_timestamp"] = int(time.time())
     return render_template('settings.html', **context)
+
+
+@app.route('/users', methods=["GET", "POST"])
+@login_required
+def manage_users():
+    if current_user.id != "admin":
+        return redirect(url_for('index'))
+    
+    context = {"users": list_users()}
+    context['is_admin'] = True
+    if request.method == "POST":
+        action = request.form.get("action")
+        username = (request.form.get("username") or "").strip()
+
+        if action == "create":
+            password_input = (request.form.get("password") or "").strip()
+            success, generated_password, message = create_user(username, password_input or None)
+            if success:
+                context["success"] = message
+                context["generated_password"] = generated_password
+                context["last_username"] = username
+            else:
+                context["error"] = message
+
+        elif action == "delete":
+            success, message = delete_user(username)
+            if success:
+                context["success"] = message
+            else:
+                context["error"] = message
+
+        elif action == "reset_password":
+            success, generated_password, message = reset_user_password(username, None)
+            if success:
+                context["success"] = message
+                context["generated_password"] = generated_password
+                context["last_username"] = username
+            else:
+                context["error"] = message
+
+        context["users"] = list_users()
+
+    return render_template('users.html', **context)
 
 
 @app.route('/settings/export', methods=["GET"])
@@ -500,7 +557,7 @@ def edit_route(route_id):
         return redirect(url_for('index'))
     
     context = {"route": route, "api_prefix": api_prefix, "new_token": secrets.token_urlsafe(32)}
-    
+    context['is_admin'] = (current_user.id == 'admin')
     if request.method == "POST":
         action = request.form.get("action")
         if action == "save":
@@ -582,6 +639,7 @@ def edit_route(route_id):
 @app.route('/route/new', methods=["POST", "GET"])
 @login_required
 def create_route():
+    is_admin = (current_user.id == 'admin')
     if request.method == "POST":
         path=request.form.get("path").strip('/').replace(" ", "") #On enlève les slashs de début et fin et les espaces
         path = re.sub(r'/+', '/', path) #Remplacement des blocs de slash (// ou /// par exemple) par un seul slash
@@ -603,7 +661,7 @@ def create_route():
             form_data = request.form.copy()
             # 2. On retire le csrf_token s'il existe (pour ne pas écraser la fonction) et pouvoir reijecter les infos rentrées dans la page sans conflit de token
             form_data.pop('csrf_token', None)
-            return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=request.form.get("token_value"), error=error, **form_data)
+            return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=request.form.get("token_value"), error=error, **form_data, is_admin=is_admin)
         
         sucess, info = add_command(new_route)
         if sucess :
@@ -614,11 +672,11 @@ def create_route():
             form_data = request.form.copy()
             # 2. On retire le csrf_token s'il existe (pour ne pas écraser la fonction) et pouvoir reijecter les infos rentrées dans la page sans conflit de token
             form_data.pop('csrf_token', None)
-            return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=request.form.get("token_value"), error=info, **form_data)
+            return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=request.form.get("token_value"), error=info, **form_data, is_admin=is_admin)
 
     else :
         token=secrets.token_urlsafe(32)    
-        return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=token)
+        return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=token, is_admin=is_admin)
 
 
 @app.route('/route/delete/<int:route_id>', methods=["POST"])
@@ -635,7 +693,8 @@ def documentation():
     with open(docs_path, "r", encoding="utf-8") as f:
         md_content = f.read()
     html_content = markdown(md_content, extensions=['fenced_code', 'codehilite'])
-    return render_template('docs.html', content=html_content)
+    is_admin = current_user.is_authenticated and (current_user.id == 'admin')
+    return render_template('docs.html', content=html_content, is_admin=is_admin)
 
 
 @app.route('/update/check', methods=['GET'])
@@ -658,6 +717,7 @@ def apply_update():
 def view_logs():
     log_path = os.path.join(os.path.dirname(__file__), "api-activity.log")
     logs = []
+    is_admin = (current_user.id == 'admin')
     try:
         if os.path.exists(log_path):
             with open(log_path, "r", encoding="utf-8", errors="replace") as f:
@@ -684,7 +744,7 @@ def view_logs():
     except Exception as e:
         logs = [f"Erreur lors de la lecture des logs : {str(e)}"]
         
-    return render_template('logs.html', logs=logs)
+    return render_template('logs.html', logs=logs, is_admin=is_admin)
 
 @app.errorhandler(429)
 def ratelimit_handler(e):

@@ -13,9 +13,7 @@ Lors du tout premier lancement de l'application, vous serez automatiquement redi
 
     Exemple : Si vous mettez v1, vos URLs ressembleront à http://IP_SERVEUR:PORT/v1/ma-route.
 
-- **Mot de passe Administrateur :** Choisissez un mot de passe fort. Il servira uniquement à accéder à l'interface web.
-
-- **Activez l'authentification à deux facteur :** Affiche un code QR à scanner avec votre téléphone (sur une application de double authentification OTP) pour confirmer chaque connexion avec un code sécurisé en plus du mot de passe. L'option est également activable/désactivable plus tard.
+- **Mot de passe Administrateur :** Choisissez un mot de passe fort. Il servira uniquement à accéder à l'interface web de l'administrateur avec le username 'admin'.
 
 Cliquez sur Créer le compte.
 
@@ -175,6 +173,15 @@ L'application enregistre toutes les tentatives d'accès. Une page de l'interface
 
 Les logs contiennet uniquement les tentatives d'accès à l'API, et non à l'interface.
 
+## 👤 Gestion des utilisateurs
+Si vous êtes connectés au compte administrateur, vous avez accès à l'onglet de gestion des utilisateurs. 
+
+![Image page d'utilisateurs'](/static/docs/users.png)
+
+Sur cette page, il est possible d'ajouter un utilisateur en lui donnant un nom et un mot de passe. Si aucun mot de passe n'est renseigné, il sera généré aléatoirement.
+
+Il est egalement possible de supprimer des comptes utilisateurs (ne fonctionne pas pour l'administrateur) ou de reinitialiser le mot de pase d'un compte (le mot de passe généré ne sera affiché qu'une fois, veillez à bien le copier).
+
 ## ⚙️ Paramètres et Sécurité
 
 Accessible via le menu Paramètres.
@@ -228,7 +235,7 @@ Tout comme les commandes, il est possible d'exporter et importer un fichier de c
 
 Pour protéger l'application contre les attaques par force brute et la surcharge, des limites de requêtes sont appliquées :
 
-- **Connexion Admin :** Maximum **5 tentatives par minute**. Au-delà, l'accès est bloqué temporairement.
+- **Connexion :** Maximum **5 tentatives par minute**. Au-delà, l'accès est bloqué temporairement.
 - **API :** Les appels aux routes API sont limités à **60 requêtes par minute** par IP (par défaut).
 
 En cas de dépassement, l'application renvoie une erreur HTTP **429 Too Many Requests**.

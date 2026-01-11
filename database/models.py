@@ -14,13 +14,13 @@ class Route(db.Model):
     tags = db.Column(db.String(200))  # Tags séparés par des virgules
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-"""
 # Table pour les utilisateurs pour plus tard
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-"""
+    is_2fa_enabled = db.Column(db.Boolean, default=False)
+    two_fa_secret = db.Column(db.String(100))  # Secret pour 2FA
 
 # Table pour la whitelist/blacklist
 class AccessRule(db.Model):
