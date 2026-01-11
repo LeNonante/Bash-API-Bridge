@@ -163,8 +163,8 @@ def index():
     nb_etats={False:0,True:0}
     for route in routes:
             nb_etats[route["active"]]+=1
-            
-    return render_template('index.html', routes=routes, api_prefix=getApiPrefix(), total_routes=len(routes), active_routes=nb_etats[True], inactive_routes=nb_etats[False])
+    is_admin = (current_user.id == 'admin')        
+    return render_template('index.html', routes=routes, api_prefix=getApiPrefix(), total_routes=len(routes), active_routes=nb_etats[True], inactive_routes=nb_etats[False], is_admin=is_admin)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -251,6 +251,7 @@ def logout():
 @login_required
 def settings():
     context = {}
+    context["is_admin"] = (current_user.id == 'admin')
     context["api_prefix"] = getApiPrefix()[:-1]
     context["current_mode"] = getMode()
     
@@ -435,6 +436,49 @@ def settings():
     return render_template('settings.html', **context)
 
 
+@app.route('/users', methods=["GET", "POST"])
+@login_required
+def manage_users():
+    if current_user.id != "admin":
+        return redirect(url_for('index'))
+    
+    context = {"users": list_users()}
+    context['is_admin'] = True
+    if request.method == "POST":
+        action = request.form.get("action")
+        username = (request.form.get("username") or "").strip()
+
+        if action == "create":
+            password_input = (request.form.get("password") or "").strip()
+            success, generated_password, message = create_user(username, password_input or None)
+            if success:
+                context["success"] = message
+                context["generated_password"] = generated_password
+                context["last_username"] = username
+            else:
+                context["error"] = message
+
+        elif action == "delete":
+            success, message = delete_user(username)
+            if success:
+                context["success"] = message
+            else:
+                context["error"] = message
+
+        elif action == "reset_password":
+            success, generated_password, message = reset_user_password(username, None)
+            if success:
+                context["success"] = message
+                context["generated_password"] = generated_password
+                context["last_username"] = username
+            else:
+                context["error"] = message
+
+        context["users"] = list_users()
+
+    return render_template('users.html', **context)
+
+
 @app.route('/settings/export', methods=["GET"])
 @login_required
 def export_commands():
@@ -513,7 +557,7 @@ def edit_route(route_id):
         return redirect(url_for('index'))
     
     context = {"route": route, "api_prefix": api_prefix, "new_token": secrets.token_urlsafe(32)}
-    
+    context['is_admin'] = (current_user.id == 'admin')
     if request.method == "POST":
         action = request.form.get("action")
         if action == "save":
@@ -595,6 +639,7 @@ def edit_route(route_id):
 @app.route('/route/new', methods=["POST", "GET"])
 @login_required
 def create_route():
+    is_admin = (current_user.id == 'admin')
     if request.method == "POST":
         path=request.form.get("path").strip('/').replace(" ", "") #On enlève les slashs de début et fin et les espaces
         path = re.sub(r'/+', '/', path) #Remplacement des blocs de slash (// ou /// par exemple) par un seul slash
@@ -616,7 +661,7 @@ def create_route():
             form_data = request.form.copy()
             # 2. On retire le csrf_token s'il existe (pour ne pas écraser la fonction) et pouvoir reijecter les infos rentrées dans la page sans conflit de token
             form_data.pop('csrf_token', None)
-            return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=request.form.get("token_value"), error=error, **form_data)
+            return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=request.form.get("token_value"), error=error, **form_data, is_admin=is_admin)
         
         sucess, info = add_command(new_route)
         if sucess :
@@ -627,11 +672,11 @@ def create_route():
             form_data = request.form.copy()
             # 2. On retire le csrf_token s'il existe (pour ne pas écraser la fonction) et pouvoir reijecter les infos rentrées dans la page sans conflit de token
             form_data.pop('csrf_token', None)
-            return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=request.form.get("token_value"), error=info, **form_data)
+            return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=request.form.get("token_value"), error=info, **form_data, is_admin=is_admin)
 
     else :
         token=secrets.token_urlsafe(32)    
-        return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=token)
+        return render_template('new_route.html', api_prefix=getApiPrefix(), new_token=token, is_admin=is_admin)
 
 
 @app.route('/route/delete/<int:route_id>', methods=["POST"])
@@ -648,7 +693,8 @@ def documentation():
     with open(docs_path, "r", encoding="utf-8") as f:
         md_content = f.read()
     html_content = markdown(md_content, extensions=['fenced_code', 'codehilite'])
-    return render_template('docs.html', content=html_content)
+    is_admin = current_user.is_authenticated and (current_user.id == 'admin')
+    return render_template('docs.html', content=html_content, is_admin=is_admin)
 
 
 @app.route('/update/check', methods=['GET'])
@@ -671,6 +717,7 @@ def apply_update():
 def view_logs():
     log_path = os.path.join(os.path.dirname(__file__), "api-activity.log")
     logs = []
+    is_admin = (current_user.id == 'admin')
     try:
         if os.path.exists(log_path):
             with open(log_path, "r", encoding="utf-8", errors="replace") as f:
@@ -697,7 +744,7 @@ def view_logs():
     except Exception as e:
         logs = [f"Erreur lors de la lecture des logs : {str(e)}"]
         
-    return render_template('logs.html', logs=logs)
+    return render_template('logs.html', logs=logs, is_admin=is_admin)
 
 @app.errorhandler(429)
 def ratelimit_handler(e):

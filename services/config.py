@@ -61,6 +61,55 @@ def setUserPassword(username, password) :
         return True
     return False
 
+def list_users():
+    users = User.query.order_by(User.username.asc()).all()
+    result = []
+    for user in users:
+        result.append({
+            "username": user.username,
+            "is_admin": user.username == "admin",
+            "is_2fa_enabled": user.is_2fa_enabled,
+        })
+    return result
+
+def create_user(username, password=None):
+    if not username:
+        return False, None, "Le nom d'utilisateur est requis."
+    if username == "admin":
+        return False, None, "Le compte admin se gère depuis Paramètres."
+    if User.query.filter_by(username=username).first():
+        return False, None, "Cet utilisateur existe déjà."
+
+    final_password = password if password else secrets.token_urlsafe(10)
+    new_user = User(username=username, password_hash=generate_password_hash(final_password))
+    db.session.add(new_user)
+    try:
+        db.session.commit()
+        return True, final_password, "Utilisateur créé avec succès."
+    except IntegrityError:
+        db.session.rollback()
+        return False, None, "Impossible de créer l'utilisateur (doublon)."
+
+def delete_user(username):
+    if username == "admin":
+        return False, "Impossible de supprimer le compte admin."
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return False, "Utilisateur introuvable."
+    db.session.delete(user)
+    db.session.commit()
+    return True, "Utilisateur supprimé avec succès."
+
+def reset_user_password(username, password=None):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return False, None, "Utilisateur introuvable."
+
+    new_password = password if password else secrets.token_urlsafe(10)
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+    return True, new_password, "Mot de passe mis à jour."
+
 def checkUserPassword(username, password) :
     user = User.query.filter_by(username=username).first()
     if user:

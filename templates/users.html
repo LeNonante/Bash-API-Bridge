@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-Bash Bridge - Utilisateurs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='settings.css') }}">
+    <style>
+        .status-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-active {
+            background: rgba(34, 197, 94, 0.18);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.18);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="/" class="logo-link" style="text-decoration: none;">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="5" width="17" height="14" rx="2" stroke="#22d3ee" stroke-width="2"/>
+                        <path d="M7 10L9 12L7 14" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 14H16" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span>API-Bash Bridge</span>
+                </div>
+            </a>
+        </div>
+        
+        <div class="nav-center">
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/logs" class="nav-link">Logs</a>
+            {% if is_admin %}
+                <a href="/users" class="nav-link active">Utilisateurs</a>
+            {% endif %}
+            <a href="/settings" class="nav-link">Paramètres</a>
+            <a href="/logout" class="nav-link">Déconnexion</a>
+            <a href="/docs" class="nav-link">Documentation</a>
+        </div>
+
+        <button class="mobile-menu-toggle" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+      
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu">
+        <a href="/" class="mobile-nav-link">Dashboard</a>
+        <a href="/logs" class="mobile-nav-link">Logs</a>
+        <a href="/users" class="mobile-nav-link active">Utilisateurs</a>
+        <a href="/settings" class="mobile-nav-link">Paramètres</a>
+        <a href="/logout" class="mobile-nav-link">Déconnexion</a>
+        <a href="/docs" class="mobile-nav-link">Documentation</a>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1>Gestion des utilisateurs</h1>
+                <p class="page-description">Créez, supprimez ou réinitialisez les mots de passe des comptes.</p>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        {% if success %}
+        <div class="alert alert-success">{{ success }}</div>
+        {% endif %}
+
+        {% if generated_password %}
+        <div class="alert alert-success">
+            <strong>Mot de passe généré</strong><br>
+            {% if last_username %}Utilisateur : <span class="path-code">{{ last_username }}</span><br>{% endif %}
+            Valeur : <span class="bash-code">{{ generated_password }}</span><br>
+            Copiez-le immédiatement, il ne sera pas ré-affiché.
+        </div>
+        {% endif %}
+
+        <div class="settings-grid" style="margin-top: 12px;">
+            <div class="login-card settings-card">
+                <h2>Créer un utilisateur</h2>
+                <p class="description">Le mot de passe est facultatif. S'il est vide, il sera généré aléatoirement.</p>
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action" value="create">
+                    <div class="form-group">
+                        <label for="username">Nom d'utilisateur</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="username" name="username" placeholder="tech" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Mot de passe (optionnel)</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="password" name="password" placeholder="Laisser vide pour générer">
+                        </div>
+                    </div>
+                    <button class="btn-primary" type="submit">Créer</button>
+                </form>
+            </div>
+
+            <div class="login-card settings-card">
+                <h2>Utilisateurs existants</h2>
+                <p class="description">Supprimez ou réinitialisez un mot de passe. Le compte admin n'est pas supprimable.</p>
+                {% if users %}
+                <div class="table-container" style="margin-top: 16px;">
+                    <table class="routes-table">
+                        <thead>
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>2FA</th>
+                                <th>Réinitialiser le mot de passe</th>
+                                <th>Supprimer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>
+                                    {% if user.is_2fa_enabled %}
+                                        <span class="status-badge status-active">Activée</span>
+                                    {% else %}
+                                        <span class="status-badge status-inactive">Désactivée</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="post" style="display: flex; gap: 8px; align-items: center;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <input type="hidden" name="action" value="reset_password">
+                                        <input type="hidden" name="username" value="{{ user.username }}">
+                                        <button class="btn-secondary" type="submit">Réinitialiser</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="post" onsubmit="return confirm('Supprimer {{ user.username }} ? Cette action est définitive.');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="username" value="{{ user.username }}">
+                                        <button class="btn-secondary" type="submit" style="background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.4); {% if user.is_admin %}opacity:0.5; cursor:not-allowed;{% endif %}" {% if user.is_admin %}disabled{% endif %}>Supprimer</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p class="description">Aucun utilisateur trouvé.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <footer style="font-size: 0.8em; color: #999; text-align: center; margin-top: 20px;">
+            Version {{ config.APP_VERSION }}
+        </footer>
+    </main>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const mobileMenu = document.querySelector('.mobile-menu');
+        
+        mobileMenuToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.navbar') && !event.target.closest('.mobile-menu')) {
+                mobileMenuToggle.classList.remove('active');
+                mobileMenu.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
