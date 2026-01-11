@@ -52,7 +52,7 @@
         </div>
 
         <div class="login-card">
-            <h2>Connexion Administrateur</h2>
+            <h2>Connexion</h2>
             <p class="description">Veuillez vous authentifier pour gérer les routes API et les commandes système.</p>
             
             <form method="post" action="/login">
@@ -61,7 +61,7 @@
                     <div class="error-message">{{ erreur }}</div>
                 {% endif %}
                 <div class="form-group">
-                    <label for="username">Username</label>
+                    <label for="username">Nom d'utilisateur</label>
                     <div class="input-wrapper">
                         <input 
                             type="text" 
@@ -79,7 +79,7 @@
                             type="password" 
                             id="password" 
                             name="password"
-                            placeholder="Entrez le mot de passe "
+                            placeholder="Entrez le mot de passe"
                             autocomplete="current-password"
                             required
                         >
